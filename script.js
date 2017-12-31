@@ -1,8 +1,6 @@
 "use strict"
 
 var guessCells = [];
-var revealedCells = [];
-var startTime;
 
 window.onload = function init() {
     var length = 4;
@@ -14,31 +12,38 @@ window.onload = function init() {
 }
 
 function initBoardUI(tableId, length, cells, timerId) {
+    var table = document.getElementById(tableId);
+    var startTime;
+
     for (let rowIndex = 0; rowIndex < length; rowIndex++) {
-        document.getElementById(tableId).insertRow();
+        var row = table.insertRow();
 
         for (let colIndex = 0; colIndex < length; colIndex++) {
-            document.getElementById(tableId).rows[rowIndex].insertCell();
-            document.getElementById(tableId).rows[rowIndex].cells[colIndex].innerHTML =
+            row.insertCell();
+            row.cells[colIndex].innerHTML =
                 "<span>" + cells[rowIndex][colIndex].value + "</span>";
-            document.getElementById(tableId).rows[rowIndex].cells[colIndex].firstChild.style.display = "none";
-            document.getElementById(tableId).rows[rowIndex].cells[colIndex]
-                .addEventListener("click", function () {
-                    cells[rowIndex][colIndex].clicks++;
-                    // document.getElementById("timer")
-                    if (!startTime) {
-                        startTime = new Date();
+            row.cells[colIndex].firstChild.style.display = "none";
+            row.cells[colIndex].addEventListener("click", function () {
+                cells[rowIndex][colIndex].clicks++;
 
-                        setInterval(function () {
-                            document.getElementById(timerId).innerHTML = new Date(new Date() - startTime).getSeconds() + " seconds";
-                        }, 1000)
+                if (!startTime) {
+                    startTime = new Date();
+                    updateTimer(timerId, startTime);
 
-                    }
+                    setInterval(function () {
+                        updateTimer(timerId, startTime);
+                    }, 1000);
+                }
 
-                    triggerCellClick(document.getElementById(tableId).rows[rowIndex].cells[colIndex]);
-                });
+                triggerCellClick(cells[rowIndex][colIndex], tableId);
+            });
         }
     }
+}
+
+function updateTimer(timerId, startTime) {
+    document.getElementById(timerId).innerHTML =
+        new Date(new Date() - startTime).toUTCString().split(' ')[4];
 }
 
 function generateGameBoardMatrix(length) {
@@ -74,34 +79,52 @@ function matrixWithInsertedValues(values, length) {
         matrix.push([]);
 
         for (let colIndex = 0; colIndex < length; colIndex++) {
-            matrix[rowIndex][colIndex] = new Tile(values.pop(), "#");
+            matrix[rowIndex][colIndex] = new Tile(values.pop(), "#", rowIndex, colIndex);
         }
     }
 
     return matrix;
 }
 
-function triggerCellClick(cell) {
-    if (guessCells.indexOf(cell) === -1 && revealedCells.indexOf(cell) === -1) {
-        if (cell.firstChild.style.display === "none" && guessCells.length < 2) {
-        } else if (guessCells.length === 2 &&
-            guessCells[0].firstChild.innerHTML === guessCells[1].firstChild.innerHTML) {
-            revealedCells.push(guessCells[0]);
-            revealedCells.push(guessCells[1]);
-            guessCells = [];
-        } else if (guessCells.length === 2) {
-            guessCells[0].firstChild.style.display = "none";
-            guessCells[1].firstChild.style.display = "none";
+function triggerCellClick(cell, tableId) {
+    if (isCellRevealed(cell)) {
+        if (guessCells.length === 2) {
+            if (!guessCells[0].pairFound) {
+                triggerCellDisplay(guessCells[0], tableId);
+                triggerCellDisplay(guessCells[1], tableId);
+            }
             guessCells = [];
         }
 
-        cell.firstChild.style.display = "";
+        triggerCellDisplay(cell, tableId);
         guessCells.push(cell);
+
+        if (guessCells.length === 2 && guessCells[0].value === guessCells[1].value) {
+            guessCells[0].pairFound = true;
+            guessCells[1].pairFound = true;
+        }
     }
 }
 
-function Tile(value, imgURL) {
+function isCellRevealed(cell) {
+    return guessCells.indexOf(cell) === -1 && !cell.pairFound;
+}
+
+function triggerCellDisplay(cell, tableId) {
+    var cellStyle = document.getElementById(tableId).rows[cell.row].cells[cell.column].firstChild.style;
+
+    if (cellStyle.display === "none") {
+        cellStyle.display = "";
+    } else {
+        cellStyle.display = "none";
+    }
+}
+
+function Tile(value, imgURL, row, col) {
     this.value = value;
     this.imgURL = imgURL;
     this.clicks = 0;
+    this.pairFound = false;
+    this.row = row;
+    this.column = col;
 }
