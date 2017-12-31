@@ -54,7 +54,7 @@ function initCell(cellDOM, cellObj, constsObj, startTime) {
     };
 
     cellDOM.innerHTML =
-        "<img src=" + cellObj.imgURL + " />";
+        "<img src=\"" + cellObj.imgURL + "\" />";
 
     for (let property in styleValues) {
         cellDOM.firstChild.style[property] = styleValues[property];
