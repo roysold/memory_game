@@ -2,26 +2,39 @@
 
 var guessCells = [];
 var revealedCells = [];
+var startTime;
 
 window.onload = function init() {
     var length = 4;
     var tableId = "game-board";
+    var timerId = "timer"
 
     var cells = generateGameBoardMatrix(length);
-    initBoardUI(tableId, length, cells);
+    initBoardUI(tableId, length, cells, timerId);
 }
 
-function initBoardUI(tableId, length, cells) {
+function initBoardUI(tableId, length, cells, timerId) {
     for (let rowIndex = 0; rowIndex < length; rowIndex++) {
         document.getElementById(tableId).insertRow();
 
         for (let colIndex = 0; colIndex < length; colIndex++) {
             document.getElementById(tableId).rows[rowIndex].insertCell();
             document.getElementById(tableId).rows[rowIndex].cells[colIndex].innerHTML =
-                "<span>" + cells[rowIndex][colIndex] + "</span>";
+                "<span>" + cells[rowIndex][colIndex].value + "</span>";
             document.getElementById(tableId).rows[rowIndex].cells[colIndex].firstChild.style.display = "none";
             document.getElementById(tableId).rows[rowIndex].cells[colIndex]
                 .addEventListener("click", function () {
+                    cells[rowIndex][colIndex].clicks++;
+                    // document.getElementById("timer")
+                    if (!startTime) {
+                        startTime = new Date();
+
+                        setInterval(function () {
+                            document.getElementById(timerId).innerHTML = new Date(new Date() - startTime).getSeconds() + " seconds";
+                        }, 1000)
+
+                    }
+
                     triggerCellClick(document.getElementById(tableId).rows[rowIndex].cells[colIndex]);
                 });
         }
@@ -61,7 +74,7 @@ function matrixWithInsertedValues(values, length) {
         matrix.push([]);
 
         for (let colIndex = 0; colIndex < length; colIndex++) {
-            matrix[rowIndex][colIndex] = values.pop();
+            matrix[rowIndex][colIndex] = new Tile(values.pop(), "#");
         }
     }
 
@@ -73,8 +86,8 @@ function triggerCellClick(cell) {
         if (cell.firstChild.style.display === "none" && guessCells.length < 2) {
         } else if (guessCells.length === 2 &&
             guessCells[0].firstChild.innerHTML === guessCells[1].firstChild.innerHTML) {
-                revealedCells.push(guessCells[0]);
-                revealedCells.push(guessCells[1]);
+            revealedCells.push(guessCells[0]);
+            revealedCells.push(guessCells[1]);
             guessCells = [];
         } else if (guessCells.length === 2) {
             guessCells[0].firstChild.style.display = "none";
@@ -85,4 +98,10 @@ function triggerCellClick(cell) {
         cell.firstChild.style.display = "";
         guessCells.push(cell);
     }
+}
+
+function Tile(value, imgURL) {
+    this.value = value;
+    this.imgURL = imgURL;
+    this.clicks = 0;
 }
