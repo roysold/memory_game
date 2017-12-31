@@ -1,0 +1,19 @@
+#game-board {
+    border-collapse: collapse;
+    border: 1px solid black;
+    position: fixed;
+    top: 50vh;
+    left: 50vw;
+    transform: translate(-50%, -50%);
+}
+
+#game-board tr {
+    height: 100px;
+}
+
+#game-board td {
+    border: 1px solid black;
+    width: 100px;
+    text-align: center;
+    font-size: 5em;
+}
