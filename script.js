@@ -1,10 +1,36 @@
 "use strict"
+
+var guessCells = [];
+var revealedCells = [];
+
 window.onload = function init() {
-    shuffleBoard("game-board", 4);
+    var length = 4;
+    var tableId = "game-board";
+
+    var cells = generateGameBoardMatrix(length);
+    initBoardUI(tableId, length, cells);
 }
 
-function shuffleBoard(tableId, length) {
+function initBoardUI(tableId, length, cells) {
+    for (let rowIndex = 0; rowIndex < length; rowIndex++) {
+        document.getElementById(tableId).insertRow();
+
+        for (let colIndex = 0; colIndex < length; colIndex++) {
+            document.getElementById(tableId).rows[rowIndex].insertCell();
+            document.getElementById(tableId).rows[rowIndex].cells[colIndex].innerHTML =
+                "<span>" + cells[rowIndex][colIndex] + "</span>";
+            document.getElementById(tableId).rows[rowIndex].cells[colIndex].firstChild.style.display = "none";
+            document.getElementById(tableId).rows[rowIndex].cells[colIndex]
+                .addEventListener("click", function () {
+                    triggerCellClick(document.getElementById(tableId).rows[rowIndex].cells[colIndex]);
+                });
+        }
+    }
+}
+
+function generateGameBoardMatrix(length) {
     var values = [];
+    var cells = [];
 
     for (let value = 0; value < length * 2; value++) {
         values.push(value);
@@ -12,8 +38,8 @@ function shuffleBoard(tableId, length) {
     }
 
     var shuffled = shuffleArray(values);
-    
-    setGameBoard(tableId, shuffled);
+
+    return matrixWithInsertedValues(shuffled, length);
 }
 
 function shuffleArray(arr) {
@@ -28,12 +54,35 @@ function shuffleArray(arr) {
     return shuffled;
 }
 
-function setGameBoard(tableId, values) {
-    var tableLength = document.getElementById(tableId).rows.length;
+function matrixWithInsertedValues(values, length) {
+    var matrix = [];
 
-    for (let rowIndex = 0; rowIndex < tableLength; rowIndex++) {
-        for (let colIndex = 0; colIndex < tableLength; colIndex++) {
-            document.getElementById(tableId).rows[rowIndex].cells[colIndex].innerHTML = values.pop();
+    for (let rowIndex = 0; rowIndex < length; rowIndex++) {
+        matrix.push([]);
+
+        for (let colIndex = 0; colIndex < length; colIndex++) {
+            matrix[rowIndex][colIndex] = values.pop();
         }
+    }
+
+    return matrix;
+}
+
+function triggerCellClick(cell) {
+    if (guessCells.indexOf(cell) === -1 && revealedCells.indexOf(cell) === -1) {
+        if (cell.firstChild.style.display === "none" && guessCells.length < 2) {
+        } else if (guessCells.length === 2 &&
+            guessCells[0].firstChild.innerHTML === guessCells[1].firstChild.innerHTML) {
+                revealedCells.push(guessCells[0]);
+                revealedCells.push(guessCells[1]);
+            guessCells = [];
+        } else if (guessCells.length === 2) {
+            guessCells[0].firstChild.style.display = "none";
+            guessCells[1].firstChild.style.display = "none";
+            guessCells = [];
+        }
+
+        cell.firstChild.style.display = "";
+        guessCells.push(cell);
     }
 }
