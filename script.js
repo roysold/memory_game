@@ -3,7 +3,7 @@
 var guessCells = [];
 
 window.onload = function init() {
-    var length = 6;
+    var length = 4;
     var tableId = "game-board";
     var timerId = "timer"
 
@@ -19,26 +19,31 @@ function initBoardUI(tableId, length, cells, timerId) {
         var row = table.insertRow();
 
         for (let colIndex = 0; colIndex < length; colIndex++) {
-            row.insertCell();
-            row.cells[colIndex].innerHTML =
+            var cell = row.insertCell();
+            cell.innerHTML =
                 "<span>" + cells[rowIndex][colIndex].value + "</span>";
-            row.cells[colIndex].firstChild.style.display = "none";
-            row.cells[colIndex].addEventListener("click", function () {
-                cells[rowIndex][colIndex].clicks++;
+            cell.firstChild.style.display = "none";
+
+            cell.addEventListener("click", function () {
 
                 if (!startTime) {
                     startTime = new Date();
-                    updateTimer(timerId, startTime);
 
-                    setInterval(function () {
-                        updateTimer(timerId, startTime);
-                    }, 1000);
+                    startTimer(timerId, startTime);
                 }
 
                 triggerCellClick(cells[rowIndex][colIndex], tableId);
             });
         }
     }
+}
+
+function startTimer(timerId, startTime) {
+    updateTimer(timerId, startTime);
+
+    setInterval(function () {
+        updateTimer(timerId, startTime);
+    }, 1000);
 }
 
 function updateTimer(timerId, startTime) {
@@ -87,6 +92,8 @@ function matrixWithInsertedValues(values, length) {
 }
 
 function triggerCellClick(cell, tableId) {
+    cell.clicks++;
+
     if (isCellRevealed(cell)) {
         if (guessCells.length === 2) {
             if (!guessCells[0].pairFound) {
