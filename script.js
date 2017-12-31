@@ -1,52 +1,83 @@
 "use strict"
 
 var guessCells = [];
+var revealed = 0;
+var startTime = {};
+var refreshTimer = {};
 
 window.onload = function init() {
-    var length = 4;
-    var tableId = "game-board";
-    var timerId = "timer"
+    const constsObj = {
+        length: 4,
+        tableId: "game-board",
+        timerId: "timer",
+        displayNoneStyle: "none"
+    }
 
-    var cells = generateGameBoardMatrix(length);
-    initBoardUI(tableId, length, cells, timerId);
+    const imgNames = {
+        0: "1.png",
+        1: "2.png",
+        2: "3.png",
+        3: "4.png",
+        4: "5.png",
+        5: "6.png",
+        6: "7.png",
+        7: "8.png"
+    };
+
+    var cells = generateGameBoardMatrix(constsObj.length, imgNames);
+    initBoardUI(constsObj, cells);
 }
 
-function initBoardUI(tableId, length, cells, timerId) {
-    var table = document.getElementById(tableId);
-    var startTime;
+function initBoardUI(constsObj, cells) {
+    var table = document.getElementById(constsObj.tableId);
 
-    for (let rowIndex = 0; rowIndex < length; rowIndex++) {
-        var row = table.insertRow();
+    cells.forEach(function (row, rowIndex) {
+        let rowDOM = table.insertRow(rowIndex);
 
-        for (let colIndex = 0; colIndex < length; colIndex++) {
-            var cell = row.insertCell();
-            cell.innerHTML =
-                "<img src=" + cells[rowIndex][colIndex].imgURL + " />";
-            cell.firstChild.style.display = "none";
-            cell.firstChild.style.width = "90px";
-            cell.firstChild.style.height = "90px";
-            cell.firstChild.style.margin = "auto";
+        row.forEach(function (cell, colIndex) {
+            let cellDOM = rowDOM.insertCell();
+            initCell(cellDOM, cells[rowIndex][colIndex], constsObj, startTime);
+        })
+    });
+}
 
-            cell.addEventListener("click", function () {
+function isEmpty(obj) {
+    return JSON.stringify(obj) === "{}";
+}
 
-                if (!startTime) {
-                    startTime = new Date();
+function initCell(cellDOM, cellObj, constsObj, startTime) {
+    let styleValues = {
+        display: "none",
+        width: "90px",
+        height: "90px",
+        margin: "auto"
+    };
 
-                    startTimer(timerId, startTime);
-                }
+    cellDOM.innerHTML =
+        "<img src=" + cellObj.imgURL + " />";
 
-                triggerCellClick(cells[rowIndex][colIndex], tableId);
-            });
-        }
+    for (let property in styleValues) {
+        cellDOM.firstChild.style[property] = styleValues[property];
+
+        cellDOM.addEventListener("click", function () {
+            setTimer(constsObj);
+            triggerCellClick(cellObj, constsObj);
+        });
     }
 }
 
-function startTimer(timerId, startTime) {
-    updateTimer(timerId, startTime);
+function setTimer(constsObj) {
+    if (isEmpty(startTime)) {
+        startTime = new Date();
 
-    setInterval(function () {
-        updateTimer(timerId, startTime);
-    }, 1000);
+        refreshTimer = setInterval(function () {
+            updateTimer(constsObj.timerId, startTime);
+        }, 1000);
+    }
+
+    if (revealed === constsObj.length * constsObj.length) {
+        clearInterval(refreshTimer);
+    }
 }
 
 function updateTimer(timerId, startTime) {
@@ -54,83 +85,87 @@ function updateTimer(timerId, startTime) {
         new Date(new Date() - startTime).toUTCString().split(' ')[4];
 }
 
-function generateGameBoardMatrix(length) {
-    var values = [];
+function generateGameBoardMatrix(length, imgNames) {
+    let values = [];
 
-    // for (let value = 0; value < (length * length) / 2; value++) {
-    //     values.push(value);
-    //     values.push(value);
-    // }
+    // Twice push() because memory game holds  each value twice.
+    for (let index = 0; index < (length * 2); index++) {
+        values.push(index);
+        values.push(index);
+    }
 
-    values.push(new Tile("images/a.png"));
-    values.push(new Tile("images/a.png"));
-    values.push(new Tile("images/b.png"));
-    values.push(new Tile("images/b.png"));
-    values.push(new Tile("images/c.png"));
-    values.push(new Tile("images/c.png"));
-    values.push(new Tile("images/d.png"));
-    values.push(new Tile("images/d.png"));
-    values.push(new Tile("images/e.png"));
-    values.push(new Tile("images/e.png"));
-    values.push(new Tile("images/f.png"));
-    values.push(new Tile("images/f.png"));
-    values.push(new Tile("images/g.png"));
-    values.push(new Tile("images/g.png"));
-    values.push(new Tile("images/h.png"));
-    values.push(new Tile("images/h.png"));
+    let shuffledValues = shuffled(values);
 
-    var shuffled = shuffleArray(values);
-
-    return matrixWithInsertedValues(shuffled, length);
+    return matrixWithInsertedValues(shuffledValues, length, imgNames);
 }
 
-function shuffleArray(arr) {
-    var arrCopy = arr.slice();
-    var shuffled = [];
+function shuffled(arr) {
+    let arrCopy = arr.slice();
+    let shuffled = [];
 
     for (let index = 0; index < arr.length; index++) {
-        var randomPlace = Math.floor(Math.random() * arrCopy.length);
+        let randomPlace = Math.floor(Math.random() * arrCopy.length);
         shuffled.push(arrCopy.splice(randomPlace, 1)[0]);
     }
 
     return shuffled;
 }
 
-function matrixWithInsertedValues(values, length) {
-    var matrix = [];
+function matrixWithInsertedValues(values, length, imgNames) {
+    let matrix = [];
+    let imagesDirectory = "images";
 
     for (let rowIndex = 0; rowIndex < length; rowIndex++) {
         matrix.push([]);
 
         for (let colIndex = 0; colIndex < length; colIndex++) {
-            matrix[rowIndex][colIndex] = values.pop();
-            matrix[rowIndex][colIndex].row = rowIndex;
-            matrix[rowIndex][colIndex].column = colIndex;
+            let value = values.pop();
+
+            matrix[rowIndex][colIndex] = new Tile(
+                value,
+                imagesDirectory + "/" + imgNames[value],
+                rowIndex,
+                colIndex
+            );
         }
     }
 
     return matrix;
 }
 
-function triggerCellClick(cell, tableId) {
+function triggerCellClick(cell, constsObj) {
     cell.clicks++;
 
     if (isCellRevealed(cell)) {
+
         if (guessCells.length === 2) {
+
             if (!guessCells[0].pairFound) {
-                triggerCellDisplay(guessCells[0], tableId);
-                triggerCellDisplay(guessCells[1], tableId);
+                triggerCellDisplay(guessCells[0], constsObj);
+                triggerCellDisplay(guessCells[1], constsObj);
             }
+
             guessCells = [];
         }
 
-        triggerCellDisplay(cell, tableId);
+        triggerCellDisplay(cell, constsObj);
         guessCells.push(cell);
 
-        if (guessCells.length === 2 && guessCells[0].imgURL === guessCells[1].imgURL) {
+        if (isPairFound(guessCells)) {
             guessCells[0].pairFound = true;
             guessCells[1].pairFound = true;
+            revealed += 2;
         }
+    }
+}
+
+function triggerCellDisplay(cell, constsObj) {
+    var cellStyle = document.getElementById(constsObj.tableId).rows[cell.row].cells[cell.column].firstChild.style;
+
+    if (cellStyle.display === constsObj.displayNoneStyle) {
+        cellStyle.display = "";
+    } else {
+        cellStyle.display = constsObj.displayNoneStyle;
     }
 }
 
@@ -138,18 +173,15 @@ function isCellRevealed(cell) {
     return guessCells.indexOf(cell) === -1 && !cell.pairFound;
 }
 
-function triggerCellDisplay(cell, tableId) {
-    var cellStyle = document.getElementById(tableId).rows[cell.row].cells[cell.column].firstChild.style;
-
-    if (cellStyle.display === "none") {
-        cellStyle.display = "";
-    } else {
-        cellStyle.display = "none";
-    }
+function isPairFound(guessCells) {
+    return guessCells.length === 2 && guessCells[0].imgURL === guessCells[1].imgURL;
 }
 
-function Tile(imgURL) {
+function Tile(value, imgURL, row, column) {
+    this.value = value;
     this.imgURL = imgURL;
+    this.row = row;
+    this.column = column;
     this.clicks = 0;
     this.pairFound = false;
 }
