@@ -3,7 +3,7 @@
 var guessCells = [];
 
 window.onload = function init() {
-    var length = 4;
+    var length = 6;
     var tableId = "game-board";
     var timerId = "timer"
 
@@ -50,7 +50,7 @@ function generateGameBoardMatrix(length) {
     var values = [];
     var cells = [];
 
-    for (let value = 0; value < length * 2; value++) {
+    for (let value = 0; value < (length * length) / 2; value++) {
         values.push(value);
         values.push(value);
     }
