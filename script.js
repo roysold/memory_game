@@ -58,12 +58,12 @@ function initCell(cellDOM, cellObj, constsObj, startTime) {
 
     for (let property in styleValues) {
         cellDOM.firstChild.style[property] = styleValues[property];
-
-        cellDOM.addEventListener("click", function () {
-            setTimer(constsObj);
-            triggerCellClick(cellObj, constsObj);
-        });
     }
+
+    cellDOM.addEventListener("click", function () {
+        setTimer(constsObj);
+        triggerCellClick(cellObj, constsObj);
+    });
 }
 
 function setTimer(constsObj) {
