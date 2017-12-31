@@ -1,4 +1,5 @@
 #game-board {
+    position: fixed;
     border-collapse: collapse;
     border: 1px solid black;
     position: fixed;
@@ -15,5 +16,9 @@
     border: 1px solid black;
     width: 100px;
     text-align: center;
-    font-size: 5em;
+}
+
+#gameboard td img {
+    max-width: 100%;
+    min-width: 100%;
 }

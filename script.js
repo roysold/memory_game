@@ -21,8 +21,11 @@ function initBoardUI(tableId, length, cells, timerId) {
         for (let colIndex = 0; colIndex < length; colIndex++) {
             var cell = row.insertCell();
             cell.innerHTML =
-                "<span>" + cells[rowIndex][colIndex].value + "</span>";
+                "<img src=" + cells[rowIndex][colIndex].imgURL + " />";
             cell.firstChild.style.display = "none";
+            cell.firstChild.style.width = "90px";
+            cell.firstChild.style.height = "90px";
+            cell.firstChild.style.margin = "auto";
 
             cell.addEventListener("click", function () {
 
@@ -53,12 +56,28 @@ function updateTimer(timerId, startTime) {
 
 function generateGameBoardMatrix(length) {
     var values = [];
-    var cells = [];
 
-    for (let value = 0; value < (length * length) / 2; value++) {
-        values.push(value);
-        values.push(value);
-    }
+    // for (let value = 0; value < (length * length) / 2; value++) {
+    //     values.push(value);
+    //     values.push(value);
+    // }
+
+    values.push(new Tile("images/a.png"));
+    values.push(new Tile("images/a.png"));
+    values.push(new Tile("images/b.png"));
+    values.push(new Tile("images/b.png"));
+    values.push(new Tile("images/c.png"));
+    values.push(new Tile("images/c.png"));
+    values.push(new Tile("images/d.png"));
+    values.push(new Tile("images/d.png"));
+    values.push(new Tile("images/e.png"));
+    values.push(new Tile("images/e.png"));
+    values.push(new Tile("images/f.png"));
+    values.push(new Tile("images/f.png"));
+    values.push(new Tile("images/g.png"));
+    values.push(new Tile("images/g.png"));
+    values.push(new Tile("images/h.png"));
+    values.push(new Tile("images/h.png"));
 
     var shuffled = shuffleArray(values);
 
@@ -84,7 +103,9 @@ function matrixWithInsertedValues(values, length) {
         matrix.push([]);
 
         for (let colIndex = 0; colIndex < length; colIndex++) {
-            matrix[rowIndex][colIndex] = new Tile(values.pop(), "#", rowIndex, colIndex);
+            matrix[rowIndex][colIndex] = values.pop();
+            matrix[rowIndex][colIndex].row = rowIndex;
+            matrix[rowIndex][colIndex].column = colIndex;
         }
     }
 
@@ -106,7 +127,7 @@ function triggerCellClick(cell, tableId) {
         triggerCellDisplay(cell, tableId);
         guessCells.push(cell);
 
-        if (guessCells.length === 2 && guessCells[0].value === guessCells[1].value) {
+        if (guessCells.length === 2 && guessCells[0].imgURL === guessCells[1].imgURL) {
             guessCells[0].pairFound = true;
             guessCells[1].pairFound = true;
         }
@@ -127,11 +148,8 @@ function triggerCellDisplay(cell, tableId) {
     }
 }
 
-function Tile(value, imgURL, row, col) {
-    this.value = value;
+function Tile(imgURL) {
     this.imgURL = imgURL;
     this.clicks = 0;
     this.pairFound = false;
-    this.row = row;
-    this.column = col;
 }
