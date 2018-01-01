@@ -84,7 +84,7 @@ function updateTimer(timerId, startTime) {
 function generateGameBoardMatrix(length, imgNames) {
     let values = [];
 
-    // Twice push() because memory game holds  each value twice.
+    // Twice push() because memory game holds each value twice.
     for (let index = 0; index < (length * 2); index++) {
         values.push(index);
         values.push(index);
@@ -109,20 +109,18 @@ function shuffled(arr) {
 
 function matrixWithInsertedValues(values, length, imgNames) {
     let matrix = [];
-    let imagesDirectory = "images";
+    const imagesDirectory = "images";
 
     for (let rowIndex = 0; rowIndex < length; rowIndex++) {
         matrix.push([]);
 
         for (let colIndex = 0; colIndex < length; colIndex++) {
-            let value = values.pop();
-
-            matrix[rowIndex][colIndex] = new Tile(
-                value,
+            matrix[rowIndex].push(new Tile(
+                values.pop(),
                 imagesDirectory + "/" + imgNames[value],
                 rowIndex,
                 colIndex
-            );
+            ));
         }
     }
 
@@ -151,10 +149,10 @@ function triggerCellClick(cell, constsObj) {
             guessCells[0].pairFound = true;
             guessCells[1].pairFound = true;
             revealed += 2;
-        }
 
-        if (revealed === constsObj.length * constsObj.length) {
-            clearInterval(refreshTimer);
+            if (revealed === constsObj.length * constsObj.length) {
+                clearInterval(refreshTimer);
+            }
         }
     }
 }
