@@ -74,10 +74,6 @@ function setTimer(constsObj) {
             updateTimer(constsObj.timerId, startTime);
         }, 1000);
     }
-
-    if (revealed === constsObj.length * constsObj.length) {
-        clearInterval(refreshTimer);
-    }
 }
 
 function updateTimer(timerId, startTime) {
@@ -155,6 +151,10 @@ function triggerCellClick(cell, constsObj) {
             guessCells[0].pairFound = true;
             guessCells[1].pairFound = true;
             revealed += 2;
+        }
+
+        if (revealed === constsObj.length * constsObj.length) {
+            clearInterval(refreshTimer);
         }
     }
 }
