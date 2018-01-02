@@ -90,7 +90,6 @@ function initModalBody() {
 }
 
 function setPageEventHandlers(METADATA, imgNames) {
-    document.getElementById(METADATA.startButtonId).onclick = startButtonEventHandler(METADATA, imgNames);
 
     document.getElementById(METADATA.chooseBoardButtonId).onclick = function () {
         document.getElementById(METADATA.optionsModalId).style.display = "block";
@@ -126,6 +125,14 @@ function tableClickHandler(METADATA, imgNames) {
             METADATA.length = elementClicked.getAttribute("data-length-value");
             document.getElementsByClassName("close")[0].dispatchEvent(new Event("click"));
             resetGame(METADATA);
+
+
+            let values = gameValues(METADATA.length);
+            let cells = matrixWithInsertedValues(values, imgNames);
+            document.getElementById(METADATA.tableId).style.cursor = "not-allowed";
+            document.getElementById(METADATA.startButtonId).onclick = startButtonEventHandler(METADATA, imgNames, values);
+
+            initBoardUI(METADATA, cells);
         };
     }
 }
@@ -140,14 +147,8 @@ function resetGame(METADATA) {
     document.getElementById(METADATA.resultId).innerHTML = "";
 }
 
-function startButtonEventHandler(METADATA, imgNames) {
+function startButtonEventHandler(METADATA, imgNames, values) {
     return function startButtonClick(eventHandler) {
-        let values = gameValues(METADATA.length);
-        let cells = matrixWithInsertedValues(values, imgNames);
-        document.getElementById(METADATA.tableId).style.cursor = "not-allowed";
-
-        initBoardUI(METADATA, cells);
-
         displayAllCellsTemporarily(2000, METADATA, function () {
             let shuffledCells = matrixWithInsertedValues(shuffled(values), imgNames);
             initBoardUI(METADATA, shuffledCells);
@@ -241,7 +242,7 @@ function setTimer(METADATA) {
 
             if (countDown.getTime() === 0) {
                 clearInterval(refreshTimer);
-                displayResult(false, METADATA);
+                endGame(false, METADATA);
             }
         }, 1000);
     }
@@ -320,11 +321,16 @@ function triggerCellClick(cell, METADATA) {
 
             if (revealed === METADATA.length * METADATA.length - 2) {
                 clearInterval(refreshTimer);
-                displayResult(true, METADATA);
+                endGame(true, METADATA);
                 triggerAllCellsDisplay(true, METADATA)();
             }
         }
     }
+}
+
+function endGame(hasWon, METADATA) {
+    document.getElementById(METADATA.tableId).style.cursor = "not-allowed";
+    displayResult(hasWon, METADATA);
 }
 
 function displayResult(hasWon, METADATA) {
