@@ -2,8 +2,8 @@
 
 var guessCells = [];
 var revealed = 0;
-var startTime = {};
 var refreshTimer = {};
+var countDown = {};
 
 window.onload = function init() {
     const METADATA = {
@@ -13,7 +13,8 @@ window.onload = function init() {
         displayNoneStyle: "none",
         startButtonId: "startGame",
         chooseBoardButtonId: "chooseBoard",
-        optionsModalId: "sizeOptionsModal"
+        optionsModalId: "sizeOptionsModal",
+        twoMinsInMS: 120000
     }
 
     const imgNames = {
@@ -51,7 +52,8 @@ window.onload = function init() {
         31: "8.png",
     };
 
-
+    document.getElementById(METADATA.startButtonId).disabled = true;
+    document.getElementById(METADATA.timerId).innerHTML = new Date(METADATA.twoMinsInMS).toUTCString().split(" ")[4];
     initModalBody();
     setPageEventHandlers(METADATA, imgNames);
 }
@@ -85,7 +87,7 @@ function initModalBody() {
 }
 
 function setPageEventHandlers(METADATA, imgNames) {
-    document.getElementById(METADATA.startButtonId).onclick = startButtonEventHandler(METADATA);
+    document.getElementById(METADATA.startButtonId).onclick = startButtonEventHandler(METADATA, imgNames);
 
     document.getElementById(METADATA.chooseBoardButtonId).onclick = function () {
         document.getElementById(METADATA.optionsModalId).style.display = "block";
@@ -119,19 +121,28 @@ function tableClickHandler(METADATA, imgNames) {
 
             METADATA.length = elementClicked.getAttribute("data-length-value");
             document.getElementsByClassName("close")[0].dispatchEvent(new Event("click"));
-            let cells = generateGameBoardMatrix(METADATA.length, imgNames);
-            initBoardUI(METADATA, cells);
+            resetGame(METADATA);
         };
     }
 }
 
-function startButtonEventHandler(METADATA) {
+function resetGame(METADATA) {
+    document.getElementById(METADATA.timerId).innerHTML = new Date(METADATA.twoMinsInMS).toUTCString().split(" ")[4];
+    clearInterval(refreshTimer);
+    countDown = {};
+    document.getElementById(METADATA.startButtonId).disabled = false;
+    document.getElementById(METADATA.tableId).innerHTML = "";
+}
+
+function startButtonEventHandler(METADATA, imgNames) {
     return function startButtonClick(eventHandler) {
-        
+        let cells = generateGameBoardMatrix(METADATA.length, imgNames);
+        initBoardUI(METADATA, cells);
         displayAllCellsTemporarily(2000, METADATA);
 
         // Remove this handler.
         eventHandler.target.removeEventListener(eventHandler.type, startButtonClick);
+        eventHandler.target.disabled = true;
     }
 }
 
@@ -155,8 +166,8 @@ function triggerAllCellsDisplay(toShow, METADATA) {
     }
 }
 
-function initBoardUI(constsObj, cells) {
-    let table = document.getElementById(constsObj.tableId);
+function initBoardUI(METADATA, cells) {
+    let table = document.getElementById(METADATA.tableId);
     table.innerHTML = "";
 
     cells.forEach(function (row, rowIndex) {
@@ -164,7 +175,7 @@ function initBoardUI(constsObj, cells) {
 
         row.forEach(function (cell, colIndex) {
             let cellDOM = rowDOM.insertCell();
-            initCell(cellDOM, cells[rowIndex][colIndex], constsObj, startTime);
+            initCell(cellDOM, cells[rowIndex][colIndex], METADATA);
         })
     });
 }
@@ -173,7 +184,7 @@ function isEmpty(obj) {
     return JSON.stringify(obj) === "{}";
 }
 
-function initCell(cellDOM, cellObj, constsObj, startTime) {
+function initCell(cellDOM, cellObj, METADATA) {
     let styleValues = {
         display: "none",
         width: "90px",
@@ -189,24 +200,23 @@ function initCell(cellDOM, cellObj, constsObj, startTime) {
     }
 
     cellDOM.onclick = function cellClickHandler() {
-        setTimer(constsObj);
-        triggerCellClick(cellObj, constsObj);
+        setTimer(METADATA);
+        triggerCellClick(cellObj, METADATA);
     };
 }
 
-function setTimer(constsObj) {
-    if (isEmpty(startTime)) {
-        startTime = new Date();
-
+function setTimer(METADATA) {
+    if (isEmpty(countDown)) {
+        countDown = new Date(METADATA.twoMinsInMS);
         refreshTimer = setInterval(function () {
-            updateTimer(constsObj.timerId, startTime);
+            countDown = new Date(countDown.getTime() - 1000);
+            document.getElementById(METADATA.timerId).innerHTML = countDown.toUTCString().split(' ')[4];
+
+            if (countDown.getTime() === 0) {
+                clearInterval(refreshTimer);
+            }
         }, 1000);
     }
-}
-
-function updateTimer(timerId, startTime) {
-    document.getElementById(timerId).innerHTML =
-        new Date(new Date() - startTime).toUTCString().split(' ')[4];
 }
 
 function generateGameBoardMatrix(length, imgNames) {
@@ -257,7 +267,7 @@ function matrixWithInsertedValues(values, length, imgNames) {
     return matrix;
 }
 
-function triggerCellClick(cell, constsObj) {
+function triggerCellClick(cell, METADATA) {
     cell.clicks++;
 
     if (isCellRevealed(cell)) {
@@ -265,14 +275,14 @@ function triggerCellClick(cell, constsObj) {
         if (guessCells.length === 2) {
 
             if (!guessCells[0].pairFound) {
-                triggerCellDisplay(guessCells[0], constsObj);
-                triggerCellDisplay(guessCells[1], constsObj);
+                triggerCellDisplay(guessCells[0], METADATA);
+                triggerCellDisplay(guessCells[1], METADATA);
             }
 
             guessCells = [];
         }
 
-        triggerCellDisplay(cell, constsObj);
+        triggerCellDisplay(cell, METADATA);
         guessCells.push(cell);
 
         if (isPairFound(guessCells)) {
@@ -280,21 +290,16 @@ function triggerCellClick(cell, constsObj) {
             guessCells[1].pairFound = true;
             revealed += 2;
 
-            if (revealed === constsObj.length * constsObj.length) {
+            if (revealed === METADATA.length * METADATA.length) {
                 clearInterval(refreshTimer);
             }
         }
     }
 }
 
-function triggerCellDisplay(cell, constsObj) {
-    let cellStyle = document.getElementById(constsObj.tableId).rows[cell.row].cells[cell.column].firstChild.style;
-
-    if (cellStyle.display === constsObj.displayNoneStyle) {
-        cellStyle.display = "";
-    } else {
-        cellStyle.display = constsObj.displayNoneStyle;
-    }
+function triggerCellDisplay(cell, METADATA) {
+    let cellStyle = document.getElementById(METADATA.tableId).rows[cell.row].cells[cell.column].firstChild.style;
+    cellStyle.display = cellStyle.display === METADATA.displayNoneStyle ? "" : METADATA.displayNoneStyle;
 }
 
 function isCellRevealed(cell) {
