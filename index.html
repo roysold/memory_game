@@ -8,17 +8,27 @@
 
 <body>
     <main>
+        <aside id="menu">
+            <button id="chooseBoard">Choose Board Size</button>
+            <button id="startGame">Start Game</button>
+        </aside>
+        <time id="timer">00:00:00</time>
         <table id="game-board">
             <tbody></tbody>
-            <tfoot>
-                <tr>
-                    <td colspan="4">
-                        <time id="timer">00:00:00</time>
-                    </td>
-                </tr>
-            </tfoot>
         </table>
     </main>
+
+    <div id="sizeOptionsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="close">&times;</span>
+                <h2>Choose Board Size</h2>
+            </div>
+            <div class="modal-body">
+            </div>
+        </div>
+
+    </div>
 </body>
 
 </html>

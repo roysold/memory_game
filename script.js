@@ -6,11 +6,14 @@ var startTime = {};
 var refreshTimer = {};
 
 window.onload = function init() {
-    const constsObj = {
+    const METADATA = {
         length: 4,
         tableId: "game-board",
         timerId: "timer",
-        displayNoneStyle: "none"
+        displayNoneStyle: "none",
+        startButtonId: "startGame",
+        chooseBoardButtonId: "chooseBoard",
+        optionsModalId: "sizeOptionsModal"
     }
 
     const imgNames = {
@@ -21,15 +24,140 @@ window.onload = function init() {
         4: "5.png",
         5: "6.png",
         6: "7.png",
-        7: "8.png"
+        7: "8.png",
+        8: "1.png",
+        9: "2.png",
+        10: "3.png",
+        11: "4.png",
+        12: "5.png",
+        13: "6.png",
+        14: "7.png",
+        15: "8.png",
+        16: "1.png",
+        17: "2.png",
+        18: "3.png",
+        19: "4.png",
+        20: "5.png",
+        21: "6.png",
+        22: "7.png",
+        23: "8.png",
+        24: "1.png",
+        25: "2.png",
+        26: "3.png",
+        27: "4.png",
+        28: "5.png",
+        29: "6.png",
+        30: "7.png",
+        31: "8.png",
     };
 
-    var cells = generateGameBoardMatrix(constsObj.length, imgNames);
-    initBoardUI(constsObj, cells);
+
+    initModalBody();
+    setPageEventHandlers(METADATA, imgNames);
+}
+
+function initModalBody() {
+    const lengths = [4, 6, 8];
+
+    lengths.forEach(function (length) {
+        let curTableInnerHTML = "<div><h3>" +
+            length +
+            " X " +
+            length +
+            "</h3><table data-length-value=\"" + length + "\" id=\"length" +
+            length +
+            "\">";
+
+        for (let rowIndex = 0; rowIndex < length; rowIndex++) {
+            curTableInnerHTML += "<tr>";
+
+            for (let colIndex = 0; colIndex < length; colIndex++) {
+                curTableInnerHTML += "<td></td>"
+            }
+
+            curTableInnerHTML += "</tr>";
+        }
+
+        curTableInnerHTML += "</table></div>";
+
+        document.getElementsByClassName("modal-body")[0].innerHTML += curTableInnerHTML;
+    });
+}
+
+function setPageEventHandlers(METADATA, imgNames) {
+    document.getElementById(METADATA.startButtonId).onclick = startButtonEventHandler(METADATA);
+
+    document.getElementById(METADATA.chooseBoardButtonId).onclick = function () {
+        document.getElementById(METADATA.optionsModalId).style.display = "block";
+    };
+
+    document.getElementsByClassName("close")[0].onclick = function () {
+        document.getElementById(METADATA.optionsModalId).style.display = METADATA.displayNoneStyle;
+    };
+
+    Array.from(document.querySelectorAll(".modal-body table")).forEach(tableClickHandler(METADATA, imgNames))
+
+    window.onclick = function (event) {
+        let modal = document.getElementById(METADATA.optionsModalId);
+
+        if (event.target === modal) {
+            modal.style.display = METADATA.displayNoneStyle;
+        }
+    }
+}
+
+function tableClickHandler(METADATA, imgNames) {
+    return function (element) {
+        element.onclick = function chooseLength(event) {
+
+            let elementClicked = event.target;
+
+            // Find table element of cell clicked.
+            while (!elementClicked.getAttribute("data-length-value")) {
+                elementClicked = elementClicked.parentNode;
+            }
+
+            METADATA.length = elementClicked.getAttribute("data-length-value");
+            document.getElementsByClassName("close")[0].dispatchEvent(new Event("click"));
+            let cells = generateGameBoardMatrix(METADATA.length, imgNames);
+            initBoardUI(METADATA, cells);
+        };
+    }
+}
+
+function startButtonEventHandler(METADATA) {
+    return function startButtonClick(eventHandler) {
+        
+        displayAllCellsTemporarily(2000, METADATA);
+
+        // Remove this handler.
+        eventHandler.target.removeEventListener(eventHandler.type, startButtonClick);
+    }
+}
+
+function displayAllCellsTemporarily(milliseconds, METADATA) {
+    let showAllCells = triggerAllCellsDisplay(true, METADATA);
+    let hideAllCells = triggerAllCellsDisplay(false, METADATA);
+
+    showAllCells();
+    setTimeout(hideAllCells, milliseconds);
+}
+
+function triggerAllCellsDisplay(toShow, METADATA) {
+    return function () {
+        const displayValue = toShow ? "" : "none";
+
+        Array.from(document.getElementById(METADATA.tableId).rows).forEach(function (row) {
+            Array.from(row.cells).forEach(function (cell) {
+                cell.firstChild.style.display = displayValue;
+            })
+        });
+    }
 }
 
 function initBoardUI(constsObj, cells) {
-    var table = document.getElementById(constsObj.tableId);
+    let table = document.getElementById(constsObj.tableId);
+    table.innerHTML = "";
 
     cells.forEach(function (row, rowIndex) {
         let rowDOM = table.insertRow(rowIndex);
@@ -60,10 +188,10 @@ function initCell(cellDOM, cellObj, constsObj, startTime) {
         cellDOM.firstChild.style[property] = styleValues[property];
     }
 
-    cellDOM.addEventListener("click", function () {
+    cellDOM.onclick = function cellClickHandler() {
         setTimer(constsObj);
         triggerCellClick(cellObj, constsObj);
-    });
+    };
 }
 
 function setTimer(constsObj) {
@@ -85,7 +213,7 @@ function generateGameBoardMatrix(length, imgNames) {
     let values = [];
 
     // Twice push() because memory game holds each value twice.
-    for (let index = 0; index < (length * 2); index++) {
+    for (let index = 0; index < (length * length / 2); index++) {
         values.push(index);
         values.push(index);
     }
@@ -115,8 +243,10 @@ function matrixWithInsertedValues(values, length, imgNames) {
         matrix.push([]);
 
         for (let colIndex = 0; colIndex < length; colIndex++) {
+            let value = values.pop();
+
             matrix[rowIndex].push(new Tile(
-                values.pop(),
+                value,
                 imagesDirectory + "/" + imgNames[value],
                 rowIndex,
                 colIndex
@@ -158,7 +288,7 @@ function triggerCellClick(cell, constsObj) {
 }
 
 function triggerCellDisplay(cell, constsObj) {
-    var cellStyle = document.getElementById(constsObj.tableId).rows[cell.row].cells[cell.column].firstChild.style;
+    let cellStyle = document.getElementById(constsObj.tableId).rows[cell.row].cells[cell.column].firstChild.style;
 
     if (cellStyle.display === constsObj.displayNoneStyle) {
         cellStyle.display = "";
