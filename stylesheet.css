@@ -1,6 +1,11 @@
+html {
+    font-family: Verdana, sans-serif;
+}
+
 main {
     display: flex;
-    align-items: center;
+    /*align-items: center;*/
+    justify-content: space-around;
     width: 100vw;
     height: 100vh;
     flex-wrap: wrap;
@@ -21,12 +26,12 @@ main * {
 }
 
 #game-board tr {
-    height: 100px;
+    height: 17vmin;
 }
 
 #game-board td {
     border: 1px solid black;
-    width: 100px;
+    width: 17vmin;
     text-align: center;
 }
 
@@ -37,14 +42,29 @@ main * {
 td img {
     max-height: 100%;
     max-width: 100%;
+    object-fit: contain;
 }
 
 #timer {
     font-size: 4em;
 }
 
-aside>* {
+aside > * {
     margin-bottom: 10px;
+}
+
+#result {
+    font-size: 1.25em;
+}
+
+#details {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#details > * {
+    flex: 1;
 }
 
 #startGame {
@@ -53,7 +73,6 @@ aside>* {
     border: 3px solid #2d841f;
     border-radius: 5px;
     background-color: #3aaa29;
-    font-family: Verdana, sans-serif;
     font-size: 1.5em;
 }
 
@@ -117,7 +136,7 @@ aside>* {
     align-items: center;
 }
 
-.modal-body > * {
+.modal-body>* {
     flex: 1;
     text-align: center;
     display: flex;
@@ -142,13 +161,4 @@ aside>* {
 
 .modal-body tr {
     height: 20px;
-}
-
-@media all and (max-width: 700px) {
-    #game-board tr {
-        height: 50px;
-    }
-    #game-board td {
-        width: 50px;
-    }
 }

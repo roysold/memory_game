@@ -14,7 +14,8 @@ window.onload = function init() {
         startButtonId: "startGame",
         chooseBoardButtonId: "chooseBoard",
         optionsModalId: "sizeOptionsModal",
-        twoMinsInMS: 120000
+        twoMinsInMS: 120000,
+        resultId: "result"
     }
 
     const imgNames = {
@@ -53,6 +54,8 @@ window.onload = function init() {
     };
 
     document.getElementById(METADATA.startButtonId).disabled = true;
+    document.getElementById(METADATA.startButtonId).style.cursor = "not-allowed";
+    document.getElementById(METADATA.chooseBoardButtonId).cursor = "pointer";
     document.getElementById(METADATA.timerId).innerHTML = new Date(METADATA.twoMinsInMS).toUTCString().split(" ")[4];
     initModalBody();
     setPageEventHandlers(METADATA, imgNames);
@@ -91,13 +94,14 @@ function setPageEventHandlers(METADATA, imgNames) {
 
     document.getElementById(METADATA.chooseBoardButtonId).onclick = function () {
         document.getElementById(METADATA.optionsModalId).style.display = "block";
+        document.getElementById(METADATA.chooseBoardButtonId).innerHTML = "Reset";
     };
 
     document.getElementsByClassName("close")[0].onclick = function () {
         document.getElementById(METADATA.optionsModalId).style.display = METADATA.displayNoneStyle;
     };
 
-    Array.from(document.querySelectorAll(".modal-body table")).forEach(tableClickHandler(METADATA, imgNames))
+    Array.from(document.querySelectorAll(".modal-body table")).forEach(tableClickHandler(METADATA, imgNames));
 
     window.onclick = function (event) {
         let modal = document.getElementById(METADATA.optionsModalId);
@@ -131,32 +135,48 @@ function resetGame(METADATA) {
     clearInterval(refreshTimer);
     countDown = {};
     document.getElementById(METADATA.startButtonId).disabled = false;
+    document.getElementById(METADATA.startButtonId).style.cursor = "pointer";
     document.getElementById(METADATA.tableId).innerHTML = "";
+    document.getElementById(METADATA.resultId).innerHTML = "";
 }
 
 function startButtonEventHandler(METADATA, imgNames) {
     return function startButtonClick(eventHandler) {
-        let cells = generateGameBoardMatrix(METADATA.length, imgNames);
+        let values = gameValues(METADATA.length);
+        let cells = matrixWithInsertedValues(values, imgNames);
+        document.getElementById(METADATA.tableId).style.cursor = "not-allowed";
+
         initBoardUI(METADATA, cells);
-        displayAllCellsTemporarily(2000, METADATA);
+
+        displayAllCellsTemporarily(2000, METADATA, function () {
+            let shuffledCells = matrixWithInsertedValues(shuffled(values), imgNames);
+            initBoardUI(METADATA, shuffledCells);
+            addCellClickEventHandlers(METADATA, shuffledCells);
+            document.getElementById(METADATA.tableId).style.cursor = "pointer";
+        });
 
         // Remove this handler.
         eventHandler.target.removeEventListener(eventHandler.type, startButtonClick);
         eventHandler.target.disabled = true;
+        eventHandler.target.style.cursor = "not-allowed";
     }
 }
 
-function displayAllCellsTemporarily(milliseconds, METADATA) {
+function displayAllCellsTemporarily(milliseconds, METADATA, callback) {
     let showAllCells = triggerAllCellsDisplay(true, METADATA);
     let hideAllCells = triggerAllCellsDisplay(false, METADATA);
 
     showAllCells();
-    setTimeout(hideAllCells, milliseconds);
+
+    setTimeout(function () {
+        hideAllCells();
+        callback();
+    }, milliseconds);
 }
 
 function triggerAllCellsDisplay(toShow, METADATA) {
     return function () {
-        const displayValue = toShow ? "" : "none";
+        const displayValue = toShow ? "" : METADATA.displayNoneStyle;
 
         Array.from(document.getElementById(METADATA.tableId).rows).forEach(function (row) {
             Array.from(row.cells).forEach(function (cell) {
@@ -186,7 +206,7 @@ function isEmpty(obj) {
 
 function initCell(cellDOM, cellObj, METADATA) {
     let styleValues = {
-        display: "none",
+        display: METADATA.displayNoneStyle,
         width: "90px",
         height: "90px",
         margin: "auto"
@@ -198,11 +218,18 @@ function initCell(cellDOM, cellObj, METADATA) {
     for (let property in styleValues) {
         cellDOM.firstChild.style[property] = styleValues[property];
     }
+}
 
-    cellDOM.onclick = function cellClickHandler() {
-        setTimer(METADATA);
-        triggerCellClick(cellObj, METADATA);
-    };
+function addCellClickEventHandlers(METADATA, cells) {
+    Array.from(document.getElementById(METADATA.tableId).rows).forEach(function (row, rowIndex) {
+        Array.from(row.cells).forEach(function (cell, cellIndex) {
+
+            cell.onclick = function cellClickHandler() {
+                setTimer(METADATA);
+                triggerCellClick(cells[rowIndex][cellIndex], METADATA);
+            };
+        });
+    });
 }
 
 function setTimer(METADATA) {
@@ -214,12 +241,13 @@ function setTimer(METADATA) {
 
             if (countDown.getTime() === 0) {
                 clearInterval(refreshTimer);
+                displayResult(false, METADATA);
             }
         }, 1000);
     }
 }
 
-function generateGameBoardMatrix(length, imgNames) {
+function gameValues(length) {
     let values = [];
 
     // Twice push() because memory game holds each value twice.
@@ -228,9 +256,7 @@ function generateGameBoardMatrix(length, imgNames) {
         values.push(index);
     }
 
-    let shuffledValues = shuffled(values);
-
-    return matrixWithInsertedValues(shuffledValues, length, imgNames);
+    return values;
 }
 
 function shuffled(arr) {
@@ -245,15 +271,17 @@ function shuffled(arr) {
     return shuffled;
 }
 
-function matrixWithInsertedValues(values, length, imgNames) {
+function matrixWithInsertedValues(values, imgNames) {
     let matrix = [];
+    let valuesCopy = values.slice();
     const imagesDirectory = "images";
+    const length = Math.sqrt(values.length);
 
     for (let rowIndex = 0; rowIndex < length; rowIndex++) {
         matrix.push([]);
 
         for (let colIndex = 0; colIndex < length; colIndex++) {
-            let value = values.pop();
+            let value = valuesCopy.pop();
 
             matrix[rowIndex].push(new Tile(
                 value,
@@ -290,11 +318,41 @@ function triggerCellClick(cell, METADATA) {
             guessCells[1].pairFound = true;
             revealed += 2;
 
-            if (revealed === METADATA.length * METADATA.length) {
+            if (revealed === METADATA.length * METADATA.length - 2) {
                 clearInterval(refreshTimer);
+                displayResult(true, METADATA);
+                triggerAllCellsDisplay(true, METADATA)();
             }
         }
     }
+}
+
+function displayResult(hasWon, METADATA) {
+    let textColor = "";
+    let resultText = "";
+
+    if (hasWon) {
+        textColor = "green";
+
+        let timeValues = new Date(new Date(METADATA.twoMinsInMS) - countDown)
+            .toUTCString()
+            .split(" ")[4]
+            .split(":");
+        let mins = parseInt(timeValues[1]);
+        let secs = parseInt(timeValues[2]);
+
+        resultText = "Good job! It took you " +
+            (mins === 0 ? "" : mins + " min ") +
+            (secs === 0 ? "" : secs + " sec") +
+            ".";
+
+    } else {
+        textColor = "red";
+        resultText = "You lost because you suck.";
+    }
+
+    document.getElementById(METADATA.resultId).style.color = textColor;
+    document.getElementById(METADATA.resultId).innerHTML = resultText;
 }
 
 function triggerCellDisplay(cell, METADATA) {
