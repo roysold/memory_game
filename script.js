@@ -205,8 +205,8 @@ function triggerAllCellsDisplay(toShow, METADATA) {
 
         Array.from(document.querySelectorAll("#" + METADATA.tableId + " td img")).forEach(function (img) {
             img.style.display = displayValue;
-        })
-    }
+        });
+    };
 }
 
 function initBoardUI(METADATA, cells) {
@@ -238,7 +238,6 @@ function initCellImg(cellDOM, cellObj, METADATA) {
 function addCellClickEventHandlers(METADATA, cells) {
     Array.from(document.getElementById(METADATA.tableId).rows).forEach(function (row, rowIndex) {
         Array.from(row.cells).forEach(function (cell, cellIndex) {
-
             cell.onclick = function cellClickHandler() {
                 setTimer(METADATA);
                 triggerCellClick(cells[rowIndex][cellIndex], METADATA);
@@ -313,19 +312,21 @@ function matrixWithInsertedValues(values, imgNames) {
 function triggerCellClick(cell, METADATA) {
     cell.clicks++;
 
-    if (isCellRevealed(cell)) {
+    if (!cell.pairFound && 
+    !(guessCells.length === 1 && cell.row === guessCells[0].row && cell.column === guessCells[0].column)) {
 
         if (guessCells.length === 2) {
 
             if (!guessCells[0].pairFound) {
-                triggerCellDisplay(guessCells[0], METADATA);
-                triggerCellDisplay(guessCells[1], METADATA);
+                toggleCellDisplay(false, guessCells[0], METADATA);
+                toggleCellDisplay(false, guessCells[1], METADATA);
             }
 
             guessCells = [];
         }
 
-        triggerCellDisplay(cell, METADATA);
+        toggleCellDisplay(true, cell, METADATA);
+
         guessCells.push(cell);
 
         if (isPairFound(guessCells)) {
@@ -375,9 +376,9 @@ function displayResult(hasWon, METADATA) {
     document.getElementById(METADATA.resultId).innerHTML = resultText;
 }
 
-function triggerCellDisplay(cell, METADATA) {
+function toggleCellDisplay(toDisplay, cell, METADATA) {
     let cellStyle = document.getElementById(METADATA.tableId).rows[cell.row].cells[cell.column].firstChild.style;
-    cellStyle.display = cellStyle.display === METADATA.displayNoneStyle ? "" : METADATA.displayNoneStyle;
+    cellStyle.display = toDisplay ? "" : METADATA.displayNoneStyle;
 }
 
 function isCellRevealed(cell) {
