@@ -30,6 +30,7 @@ main * {
     text-align: center;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
     background-color: #3aaa29;
+    position: relative;
 }
 
 #game-board td:hover {
@@ -170,35 +171,97 @@ aside>* {
 
 /*Animation*/
 
-#game-board td {
-    animation-name: card;
-    animation-duration: 2s;
+.table-spin {
+    animation: spin 3s;
+    animation-iteration-count: 1;
 }
 
-@keyframes card {
+.even-row {
+    animation: spin 2s;
+    animation-iteration-count: 1;
+}
+
+.odd-row {
+    animation: backspin 1s linear;
+    animation-iteration-count: 2;
+}
+
+.even-cell {
+    animation: backspin-move 2.5s;
+    animation-iteration-count: 1;
+}
+
+.odd-cell {
+    animation: spin-move 2.5s;
+    animation-iteration-count: 1;
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes backspin {
+    100% {
+        transform: rotate(-360deg);
+    }
+}
+
+@keyframes spin-move {
     0% {
-        background-color: red;
+        /*background-color: red;*/
         left: 0px;
         top: 0px;
     }
     25% {
-        background-color: yellow;
-        left: 200px;
+        /*background-color: yellow;*/
+        left: 3vmin;
         top: 0px;
     }
     50% {
-        background-color: blue;
-        left: 200px;
-        top: 200px;
+        /*background-color: blue;*/
+        left: -3vmin;
+        top: -5vmin;
     }
     75% {
-        background-color: green;
+        /*background-color: green;*/
         left: 0px;
-        top: 200px;
+        top: 3vmin;
     }
     100% {
-        background-color: red;
+        /*background-color: red;*/
         left: 0px;
         top: 0px;
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes backspin-move {
+    0% {
+        /*background-color: red;*/
+        left: 0px;
+        top: 0px;
+    }
+    25% {
+        /*background-color: yellow;*/
+        left: -3vmin;
+        top: 0px;
+    }
+    50% {
+        /*background-color: blue;*/
+        left: 3vmin;
+        top: 5vmin;
+    }
+    75% {
+        /*background-color: green;*/
+        left: 0px;
+        top: -3vmin;
+    }
+    100% {
+        /*background-color: red;*/
+        left: 0px;
+        top: 0px;
+        transform: rotate(-360deg);
     }
 }

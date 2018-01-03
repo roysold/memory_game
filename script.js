@@ -105,7 +105,8 @@ function setPageEventHandlers(METADATA, imgNames) {
         document.getElementById(METADATA.optionsModalId).style.display = METADATA.displayNoneStyle;
     };
 
-    Array.from(document.querySelectorAll("." + METADATA.modalBodyClass, "table")).forEach(tableClickHandler(METADATA, imgNames));
+    Array.from(document.querySelectorAll("." + METADATA.modalBodyClass, "table"))
+        .forEach(tableClickHandler(METADATA, imgNames));
 
     window.onclick = function (event) {
         let modal = document.getElementById(METADATA.optionsModalId);
@@ -160,8 +161,10 @@ function startButtonEventHandler(METADATA, imgNames, values) {
         displayAllCellsTemporarily(2000, METADATA, function () {
             let shuffledCells = matrixWithInsertedValues(shuffled(values), imgNames);
             initBoardUI(METADATA, shuffledCells);
-            addCellClickEventHandlers(METADATA, shuffledCells);
-            document.getElementById(METADATA.tableId).style.cursor = "pointer";
+            animateShuffle(METADATA, function () {
+                addCellClickEventHandlers(METADATA, shuffledCells);
+                document.getElementById(METADATA.tableId).style.cursor = "pointer";
+            });
         });
 
         // Remove this handler.
@@ -169,6 +172,19 @@ function startButtonEventHandler(METADATA, imgNames, values) {
         eventHandler.target.disabled = true;
         eventHandler.target.style.cursor = "not-allowed";
     }
+}
+
+function animateShuffle(METADATA, callback) {
+    document.getElementById(METADATA.tableId).classList.add("table-spin");
+
+    Array.from(document.getElementById(METADATA.tableId).rows).forEach(function (row, rowIndex) {
+        row.classList.add(rowIndex % 2 == 0 ? "even-row" : "odd-row");
+        Array.from(row.cells).forEach(function (cell, cellIndex) {
+            cell.classList.add(cellIndex % 2 == 0 ? "even-cell" : "odd-cell");
+        });
+    });
+
+    document.getElementById(METADATA.tableId).addEventListener("animationend", callback, false);
 }
 
 function displayAllCellsTemporarily(milliseconds, METADATA, callback) {
@@ -187,11 +203,9 @@ function triggerAllCellsDisplay(toShow, METADATA) {
     return function () {
         const displayValue = toShow ? "" : METADATA.displayNoneStyle;
 
-        Array.from(document.getElementById(METADATA.tableId).rows).forEach(function (row) {
-            Array.from(row.cells).forEach(function (cell) {
-                cell.firstChild.style.display = displayValue;
-            })
-        });
+        Array.from(document.querySelectorAll("#" + METADATA.tableId + " td img")).forEach(function (img) {
+            img.style.display = displayValue;
+        })
     }
 }
 
@@ -202,9 +216,9 @@ function initBoardUI(METADATA, cells) {
     cells.forEach(function (row, rowIndex) {
         let rowDOM = table.insertRow(rowIndex);
 
-        row.forEach(function (cell, colIndex) {
+        row.forEach(function (cell, cellIndex) {
             let cellDOM = rowDOM.insertCell();
-            initCellImg(cellDOM, cells[rowIndex][colIndex], METADATA);
+            initCellImg(cellDOM, cells[rowIndex][cellIndex], METADATA);
         })
     });
 }
