@@ -312,8 +312,8 @@ function matrixWithInsertedValues(values, imgNames) {
 function triggerCellClick(cell, METADATA) {
     cell.clicks++;
 
-    if (!cell.pairFound && 
-    !(guessCells.length === 1 && cell.row === guessCells[0].row && cell.column === guessCells[0].column)) {
+    if (!cell.pairFound &&
+        !(guessCells.length === 1 && cell.row === guessCells[0].row && cell.column === guessCells[0].column)) {
 
         if (guessCells.length === 2) {
 
@@ -344,7 +344,12 @@ function triggerCellClick(cell, METADATA) {
 }
 
 function endGame(hasWon, METADATA) {
+    Array.from(document.querySelectorAll("#" + METADATA.tableId + " td")).forEach(function (cell) {
+        cell.onclick = undefined;
+    });
+
     document.getElementById(METADATA.tableId).style.cursor = "not-allowed";
+
     displayResult(hasWon, METADATA);
 }
 

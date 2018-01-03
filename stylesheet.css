@@ -4,7 +4,6 @@ html {
 
 main {
     display: flex;
-    /*justify-content: space-around;*/
     width: 90vw;
     height: 90vh;
     flex-wrap: wrap;
@@ -111,7 +110,7 @@ aside>* {
     margin: auto;
     padding: 0;
     border: 1px solid #888;
-    width: 80%;
+    width: 80vw;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
@@ -130,13 +129,14 @@ aside>* {
 
 .modal-header {
     padding: 2px 16px;
+    height: 10vh;
     background-color: #1d7d82;
     color: white;
 }
 
 .modal-body {
     padding: 2px 16px;
-    height: 300px;
+    height: 50vh;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -163,11 +163,11 @@ aside>* {
 
 .modal-body td {
     border: 1px solid black;
-    width: 20px;
+    width: 2vmin;
 }
 
 .modal-body tr {
-    height: 20px;
+    height: 2vmin;
 }
 
 /*Animation*/
