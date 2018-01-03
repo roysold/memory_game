@@ -70,7 +70,7 @@ aside>* {
     flex: 1;
 }
 
-#menu>button {
+.menu-button {
     width: 20vw;
     height: 10vh;
     min-width: 75px;
@@ -80,15 +80,27 @@ aside>* {
 }
 
 #startGame {
-    border: 3px solid #2d841f;
+    border: 3px solid #236818;
     background-color: #3aaa29;
 }
 
+#startGame:disabled {
+    color: #6d6d6d;
+}
+
+#startGame:hover {
+    background-color: #329624;
+}
+
 #chooseBoard {
-    border: 3px solid #d6cb35;
+    border: 3px solid #a59d2b;
     background-color: #f4e842;
     font-family: Verdana, sans-serif;
     cursor: pointer;
+}
+
+#chooseBoard:hover {
+    background-color: #d6cb39;
 }
 
 .modal {
@@ -117,7 +129,6 @@ aside>* {
 .close {
     color: white;
     float: right;
-    font-size: 28px;
     font-weight: bold;
 }
 
@@ -130,8 +141,13 @@ aside>* {
 .modal-header {
     padding: 2px 16px;
     height: 10vh;
+    /*min-height: 10px;*/
     background-color: #1d7d82;
     color: white;
+}
+
+.modal-header>* {
+    font-size: 5vmin;
 }
 
 .modal-body {
