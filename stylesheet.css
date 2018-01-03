@@ -5,9 +5,10 @@ html {
 main {
     display: flex;
     /*justify-content: space-around;*/
-    width: 100vw;
-    height: 100vh;
+    width: 90vw;
+    height: 90vh;
     flex-wrap: wrap;
+    margin: auto;
 }
 
 main * {
@@ -43,12 +44,12 @@ td img {
 }
 
 #timer {
-    font-size: 3em;
+    font-size: 5vmin;
 }
 
-@media all and (max-width: 500px) {
+@media all and (max-width: 400px), all and (max-height: 400px) {
     #timer {
-        font-size: 2em;
+        font-size: 1em;
     }
 }
 
