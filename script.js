@@ -15,7 +15,9 @@ window.onload = function init() {
         chooseBoardButtonId: "chooseBoard",
         optionsModalId: "sizeOptionsModal",
         twoMinsInMS: 120000,
-        resultId: "result"
+        resultId: "result",
+        gameLengths: [4, 6, 8],
+        modalBodyClass: "modal-body"
     }
 
     const imgNames = {
@@ -53,18 +55,21 @@ window.onload = function init() {
         31: "8.png",
     };
 
+    initElements(METADATA)
+    initModalBody(METADATA);
+    setPageEventHandlers(METADATA, imgNames);
+}
+
+function initElements(METADATA) {
     document.getElementById(METADATA.startButtonId).disabled = true;
     document.getElementById(METADATA.startButtonId).style.cursor = "not-allowed";
     document.getElementById(METADATA.chooseBoardButtonId).cursor = "pointer";
     document.getElementById(METADATA.timerId).innerHTML = new Date(METADATA.twoMinsInMS).toUTCString().split(" ")[4];
-    initModalBody();
-    setPageEventHandlers(METADATA, imgNames);
 }
 
-function initModalBody() {
-    const lengths = [4, 6, 8];
+function initModalBody(METADATA) {
 
-    lengths.forEach(function (length) {
+    METADATA.gameLengths.forEach(function (length) {
         let curTableInnerHTML = "<div><h3>" +
             length +
             " X " +
@@ -85,7 +90,7 @@ function initModalBody() {
 
         curTableInnerHTML += "</table></div>";
 
-        document.getElementsByClassName("modal-body")[0].innerHTML += curTableInnerHTML;
+        document.getElementsByClassName(METADATA.modalBodyClass)[0].innerHTML += curTableInnerHTML;
     });
 }
 
@@ -100,7 +105,7 @@ function setPageEventHandlers(METADATA, imgNames) {
         document.getElementById(METADATA.optionsModalId).style.display = METADATA.displayNoneStyle;
     };
 
-    Array.from(document.querySelectorAll(".modal-body table")).forEach(tableClickHandler(METADATA, imgNames));
+    Array.from(document.querySelectorAll("." + METADATA.modalBodyClass, "table")).forEach(tableClickHandler(METADATA, imgNames));
 
     window.onclick = function (event) {
         let modal = document.getElementById(METADATA.optionsModalId);
@@ -124,27 +129,30 @@ function tableClickHandler(METADATA, imgNames) {
 
             METADATA.length = elementClicked.getAttribute("data-length-value");
             document.getElementsByClassName("close")[0].dispatchEvent(new Event("click"));
-            resetGame(METADATA);
+            resetGame(METADATA, imgNames);
 
-
-            let values = gameValues(METADATA.length);
-            let cells = matrixWithInsertedValues(values, imgNames);
-            document.getElementById(METADATA.tableId).style.cursor = "not-allowed";
-            document.getElementById(METADATA.startButtonId).onclick = startButtonEventHandler(METADATA, imgNames, values);
-
-            initBoardUI(METADATA, cells);
         };
     }
 }
 
-function resetGame(METADATA) {
-    document.getElementById(METADATA.timerId).innerHTML = new Date(METADATA.twoMinsInMS).toUTCString().split(" ")[4];
+function resetGame(METADATA, imgNames) {
     clearInterval(refreshTimer);
     countDown = {};
+    guessCells = [];
+    revealed = 0;
+
+    document.getElementById(METADATA.timerId).innerHTML = new Date(METADATA.twoMinsInMS).toUTCString().split(" ")[4];
     document.getElementById(METADATA.startButtonId).disabled = false;
     document.getElementById(METADATA.startButtonId).style.cursor = "pointer";
-    document.getElementById(METADATA.tableId).innerHTML = "";
     document.getElementById(METADATA.resultId).innerHTML = "";
+    document.getElementById(METADATA.tableId).innerHTML = "";
+    document.getElementById(METADATA.tableId).style.cursor = "not-allowed";
+
+    let values = gameValues(METADATA.length);
+    let cells = matrixWithInsertedValues(values, imgNames);
+    document.getElementById(METADATA.startButtonId).onclick = startButtonEventHandler(METADATA, imgNames, values);
+
+    initBoardUI(METADATA, cells);
 }
 
 function startButtonEventHandler(METADATA, imgNames, values) {
@@ -196,7 +204,7 @@ function initBoardUI(METADATA, cells) {
 
         row.forEach(function (cell, colIndex) {
             let cellDOM = rowDOM.insertCell();
-            initCell(cellDOM, cells[rowIndex][colIndex], METADATA);
+            initCellImg(cellDOM, cells[rowIndex][colIndex], METADATA);
         })
     });
 }
@@ -205,20 +213,12 @@ function isEmpty(obj) {
     return JSON.stringify(obj) === "{}";
 }
 
-function initCell(cellDOM, cellObj, METADATA) {
-    let styleValues = {
-        display: METADATA.displayNoneStyle,
-        width: "90px",
-        height: "90px",
-        margin: "auto"
-    };
+function initCellImg(cellDOM, cellObj, METADATA) {
+    let imgElement = document.createElement("img");
+    imgElement.setAttribute("src", cellObj.imgURL);
+    imgElement.style.display = METADATA.displayNoneStyle;
 
-    cellDOM.innerHTML =
-        "<img src=\"" + cellObj.imgURL + "\" />";
-
-    for (let property in styleValues) {
-        cellDOM.firstChild.style[property] = styleValues[property];
-    }
+    cellDOM.appendChild(imgElement);
 }
 
 function addCellClickEventHandlers(METADATA, cells) {
