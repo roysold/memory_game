@@ -9,64 +9,33 @@ window.onload = function init() {
         startButtonId: "startGame",
         chooseBoardButtonId: "chooseBoard",
         optionsModalId: "sizeOptionsModal",
-        twoMinsInMS: 120000,
+        timePerGameInMS: 120000,
         resultId: "result",
         gameLengths: [4, 6, 8],
         modalBodyClass: "modal-body",
-        guessCells: [],
+        guessedCells: [],
         revealed: 0,
-        refreshTimer: {},
-        countDown: {}
+        refreshTimer: undefined,
+        countDown: undefined
     }
-
-    const imgNames = {
-        0: "1.png",
-        1: "2.png",
-        2: "3.png",
-        3: "4.png",
-        4: "5.png",
-        5: "6.png",
-        6: "7.png",
-        7: "8.png",
-        8: "1.png",
-        9: "2.png",
-        10: "3.png",
-        11: "4.png",
-        12: "5.png",
-        13: "6.png",
-        14: "7.png",
-        15: "8.png",
-        16: "1.png",
-        17: "2.png",
-        18: "3.png",
-        19: "4.png",
-        20: "5.png",
-        21: "6.png",
-        22: "7.png",
-        23: "8.png",
-        24: "1.png",
-        25: "2.png",
-        26: "3.png",
-        27: "4.png",
-        28: "5.png",
-        29: "6.png",
-        30: "7.png",
-        31: "8.png",
-    };
 
     initElements(METADATA)
     initModalBody(METADATA);
-    setPageEventHandlers(METADATA, imgNames);
+    setPageEventHandlers(METADATA);
 }
 
 function initElements(METADATA) {
     document.getElementById(METADATA.startButtonId).disabled = true;
     setCursorToNotAllowed(METADATA.startButtonId);
     setCursorToPointer(METADATA.chooseBoardButtonId);
-    document.getElementById(METADATA.timerId).innerHTML = dateFormatString(new Date(METADATA.twoMinsInMS));
+    document.getElementById(METADATA.timerId).innerHTML = dateFormatString(new Date(METADATA.timePerGameInMS));
 }
+
 function dateFormatString(date) {
-    return date.toUTCString().split(" ")[4].substring(3);
+    let mins = date.getMinutes();
+    let secs = date.getSeconds();
+
+    return (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
 }
 
 function changeCursorStyle(elementId, cursorStyle) {
@@ -109,7 +78,7 @@ function initModalBody(METADATA) {
     });
 }
 
-function setPageEventHandlers(METADATA, imgNames) {
+function setPageEventHandlers(METADATA) {
     document.getElementById(METADATA.chooseBoardButtonId).onclick = function () {
         document.getElementById(METADATA.optionsModalId).style.display = "block";
         document.getElementById(METADATA.chooseBoardButtonId).innerHTML = "Reset";
@@ -120,7 +89,9 @@ function setPageEventHandlers(METADATA, imgNames) {
     };
 
     Array.from(document.querySelectorAll("." + METADATA.modalBodyClass + " table"))
-        .forEach(tableOptionClickHandler(METADATA, imgNames));
+        .forEach(function (element) {
+            element.onclick = chooseLength.bind({ METADATA: METADATA });
+        });
 
     window.onclick = function (event) {
         let modal = document.getElementById(METADATA.optionsModalId);
@@ -131,33 +102,29 @@ function setPageEventHandlers(METADATA, imgNames) {
     }
 }
 
-function tableOptionClickHandler(METADATA, imgNames) {
-    return function (element) {
-        element.onclick = function chooseLength(event) {
+function chooseLength(event) {
 
-            let elementClicked = event.target;
-            let tableLengthAttribute = "data-length";
+    let elementClicked = event.target;
+    let tableLengthAttribute = "data-length";
 
-            // Find table element of cell clicked.
-            while (!elementClicked.getAttribute(tableLengthAttribute)) {
-                elementClicked = elementClicked.parentNode;
-            }
-
-            METADATA.length = elementClicked.getAttribute(tableLengthAttribute);
-            document.getElementsByClassName("close")[0].dispatchEvent(new Event("click"));
-            resetGame(METADATA, imgNames);
-        };
+    // Find table element of cell clicked.
+    while (!elementClicked.getAttribute(tableLengthAttribute)) {
+        elementClicked = elementClicked.parentNode;
     }
+
+    this.METADATA.length = elementClicked.getAttribute(tableLengthAttribute);
+    document.getElementsByClassName("close")[0].dispatchEvent(new Event("click"));
+    resetGame(this.METADATA);
 }
 
-function resetGame(METADATA, imgNames) {
+function resetGame(METADATA) {
     clearInterval(METADATA.refreshTimer);
-    METADATA.countDown = {};
+    METADATA.countDown = undefined;
     METADATA.guessCells = [];
     METADATA.revealed = 0;
 
     document.getElementById(METADATA.timerId).style.display = "";
-    document.getElementById(METADATA.timerId).innerHTML = dateFormatString(new Date(METADATA.twoMinsInMS));
+    document.getElementById(METADATA.timerId).innerHTML = dateFormatString(new Date(METADATA.timePerGameInMS));
     document.getElementById(METADATA.startButtonId).disabled = false;
     setCursorToPointer(METADATA.startButtonId);
     document.getElementById(METADATA.resultId).innerHTML = "";
@@ -165,19 +132,20 @@ function resetGame(METADATA, imgNames) {
     setCursorToNotAllowed(METADATA.tableId);
 
     let values = gameValues(METADATA.length);
-    let cells = matrixWithInsertedValues(values, imgNames);
-    document.getElementById(METADATA.startButtonId).onclick = startButtonEventHandler(METADATA, imgNames, values);
+    let cells = matrixWithInsertedValues(values);
+    document.getElementById(METADATA.startButtonId).onclick =
+        startButtonEventHandler(METADATA, values);
 
     initBoardUI(METADATA, cells);
 }
 
-function startButtonEventHandler(METADATA, imgNames, values) {
+function startButtonEventHandler(METADATA, values) {
     return function startButtonClick(eventHandler) {
         displayAllCellsTemporarily(2000, METADATA, function () {
             triggerAllCellsDisplay(true, METADATA);
 
             animateShuffle(METADATA, function () {
-                let shuffledCells = matrixWithInsertedValues(shuffled(values), imgNames);
+                let shuffledCells = matrixWithInsertedValues(shuffled(values));
                 initBoardUI(METADATA, shuffledCells);
                 addCellClickEventHandlers(METADATA, shuffledCells);
                 setCursorToPointer(METADATA.tableId);
@@ -197,29 +165,32 @@ function animateShuffle(METADATA, callback) {
 
     Array.from(tableDOMElement.rows).forEach(function (row, rowIndex) {
         row.classList.add(rowIndex % 2 == 0 ? "even-row" : "odd-row");
+
         Array.from(row.cells).forEach(function (cell, cellIndex) {
             cell.classList.add(cellIndex % 2 == 0 ? "even-cell" : "odd-cell");
             cell.firstChild.classList.add("fade");
         });
     });
 
-    document.getElementById(METADATA.tableId).addEventListener("animationend", callback, false);
+    document.getElementById(METADATA.tableId).addEventListener(
+        "animationend",
+        callback,
+        false
+    );
 }
 
 function displayAllCellsTemporarily(milliseconds, METADATA, callback) {
     triggerAllCellsDisplay(true, METADATA);
-
-    setTimeout(function () {
-        callback();
-    }, milliseconds);
+    setTimeout(callback, milliseconds);
 }
 
 function triggerAllCellsDisplay(toShow, METADATA) {
     const displayValue = toShow ? "" : METADATA.displayNoneStyle;
 
-    Array.from(document.querySelectorAll("#" + METADATA.tableId + " td img")).forEach(function (img) {
-        img.style.display = displayValue;
-    });
+    Array.from(document.querySelectorAll("#" + METADATA.tableId + " td img"))
+        .forEach(function (img) {
+            img.style.display = displayValue;
+        });
 }
 
 function initBoardUI(METADATA, cells) {
@@ -236,10 +207,6 @@ function initBoardUI(METADATA, cells) {
     });
 }
 
-function isEmpty(obj) {
-    return JSON.stringify(obj) === "{}";
-}
-
 function initCellImg(cellDOM, cellObj, METADATA) {
     let imgElement = document.createElement("img");
     imgElement.style.display = METADATA.displayNoneStyle;
@@ -252,9 +219,10 @@ function addCellClickEventHandlers(METADATA, cells) {
     Array.from(document.getElementById(METADATA.tableId).rows).forEach(function (row, rowIndex) {
         Array.from(row.cells).forEach(function (cell, cellIndex) {
             cell.onclick = function cellClickHandler() {
-                if (isEmpty(METADATA.countDown)) {
+                if (METADATA.countDown === undefined) {
                     setTimer(METADATA);
                 }
+
                 triggerCellClick(cells[rowIndex][cellIndex], METADATA);
             };
         });
@@ -262,7 +230,7 @@ function addCellClickEventHandlers(METADATA, cells) {
 }
 
 function setTimer(METADATA) {
-    METADATA.countDown = new Date(METADATA.twoMinsInMS);
+    METADATA.countDown = new Date(METADATA.timePerGameInMS);
     METADATA.refreshTimer = setInterval(function () {
         METADATA.countDown = new Date(METADATA.countDown.getTime() - 1000);
         document.getElementById(METADATA.timerId).innerHTML = dateFormatString(METADATA.countDown);
@@ -298,7 +266,43 @@ function shuffled(arr) {
     return shuffled;
 }
 
-function matrixWithInsertedValues(values, imgNames) {
+function matrixWithInsertedValues(values) {
+
+    const imgNames = {
+        0: "1.png",
+        1: "2.png",
+        2: "3.png",
+        3: "4.png",
+        4: "5.png",
+        5: "6.png",
+        6: "7.png",
+        7: "8.png",
+        8: "1.png",
+        9: "2.png",
+        10: "3.png",
+        11: "4.png",
+        12: "5.png",
+        13: "6.png",
+        14: "7.png",
+        15: "8.png",
+        16: "1.png",
+        17: "2.png",
+        18: "3.png",
+        19: "4.png",
+        20: "5.png",
+        21: "6.png",
+        22: "7.png",
+        23: "8.png",
+        24: "1.png",
+        25: "2.png",
+        26: "3.png",
+        27: "4.png",
+        28: "5.png",
+        29: "6.png",
+        30: "7.png",
+        31: "8.png",
+    };
+
     let matrix = [];
     let valuesCopy = values.slice();
     const imagesDirectory = "images";
@@ -328,8 +332,9 @@ function triggerCellClick(cell, METADATA) {
     if (isCellClickable(cell, METADATA.guessCells)) {
         if (METADATA.guessCells.length === 2) {
             if (!METADATA.guessCells[0].pairFound) {
-                toggleCellDisplay(false, METADATA.guessCells[0], METADATA);
-                toggleCellDisplay(false, METADATA.guessCells[1], METADATA);
+                METADATA.guessCells.forEach(function (cell) {
+                    toggleCellDisplay(false, cell, METADATA);
+                });
             }
 
             METADATA.guessCells = [];
@@ -340,11 +345,14 @@ function triggerCellClick(cell, METADATA) {
         METADATA.guessCells.push(cell);
 
         if (isPairFound(METADATA)) {
-            METADATA.guessCells[0].pairFound = true;
-            METADATA.guessCells[1].pairFound = true;
-            METADATA.revealed += 2;
 
-            if (METADATA.revealed === METADATA.length * METADATA.length - 2) {
+            METADATA.guessCells.forEach(function (cell) {
+                cell.pairFound = true;
+            })
+
+            METADATA.revealed += METADATA.guessCells.length;
+
+            if (METADATA.revealed === METADATA.length * METADATA.length - METADATA.guessCells.length) {
                 clearInterval(METADATA.refreshTimer);
                 endGame(true, METADATA);
                 triggerAllCellsDisplay(true, METADATA)
@@ -378,7 +386,7 @@ function displayResult(hasWon, METADATA) {
     } else {
         textColor = "green";
 
-        let timeValues = dateFormatString(new Date(new Date(METADATA.twoMinsInMS) - METADATA.countDown)).split(":");
+        let timeValues = dateFormatString(new Date(new Date(METADATA.timePerGameInMS) - METADATA.countDown)).split(":");
         let mins = parseInt(timeValues[0]);
         let secs = parseInt(timeValues[1]);
 
@@ -399,7 +407,8 @@ function toggleCellDisplay(toDisplay, cell, METADATA) {
 }
 
 function isPairFound(METADATA) {
-    return METADATA.guessCells.length === 2 && METADATA.guessCells[0].imgURL === METADATA.guessCells[1].imgURL;
+    return METADATA.guessCells.length === 2 &&
+        METADATA.guessCells[0].value === METADATA.guessCells[1].value;
 }
 
 function Tile(value, imgURL, row, column) {
