@@ -252,7 +252,9 @@ function addCellClickEventHandlers(METADATA, cells) {
     Array.from(document.getElementById(METADATA.tableId).rows).forEach(function (row, rowIndex) {
         Array.from(row.cells).forEach(function (cell, cellIndex) {
             cell.onclick = function cellClickHandler() {
-                setTimer(METADATA);
+                if (isEmpty(METADATA.countDown)) {
+                    setTimer(METADATA);
+                }
                 triggerCellClick(cells[rowIndex][cellIndex], METADATA);
             };
         });
@@ -260,18 +262,16 @@ function addCellClickEventHandlers(METADATA, cells) {
 }
 
 function setTimer(METADATA) {
-    if (isEmpty(METADATA.countDown)) {
-        METADATA.countDown = new Date(METADATA.twoMinsInMS);
-        METADATA.refreshTimer = setInterval(function () {
-            METADATA.countDown = new Date(METADATA.countDown.getTime() - 1000);
-            document.getElementById(METADATA.timerId).innerHTML = dateFormatString(METADATA.countDown);
+    METADATA.countDown = new Date(METADATA.twoMinsInMS);
+    METADATA.refreshTimer = setInterval(function () {
+        METADATA.countDown = new Date(METADATA.countDown.getTime() - 1000);
+        document.getElementById(METADATA.timerId).innerHTML = dateFormatString(METADATA.countDown);
 
-            if (METADATA.countDown.getTime() === 0) {
-                clearInterval(METADATA.refreshTimer);
-                endGame(false, METADATA);
-            }
-        }, 1000);
-    }
+        if (METADATA.countDown.getTime() === 0) {
+            clearInterval(METADATA.refreshTimer);
+            endGame(false, METADATA);
+        }
+    }, 1000);
 }
 
 function gameValues(length) {
@@ -393,8 +393,8 @@ function displayResult(hasWon, METADATA) {
 }
 
 function toggleCellDisplay(toDisplay, cell, METADATA) {
-    let cellStyle = document.getElementById(METADATA.tableId).rows[cell.row].cells[cell.column].firstChild.style;
-    cellStyle.display = toDisplay ? "" : METADATA.displayNoneStyle;
+    let imgStyle = document.getElementById(METADATA.tableId).rows[cell.row].cells[cell.column].firstChild.style;
+    imgStyle.display = toDisplay ? "" : METADATA.displayNoneStyle;
 }
 
 function isPairFound(METADATA) {
