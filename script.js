@@ -93,7 +93,7 @@ function initModalBody(METADATA) {
         DOMElements.div.appendChild(DOMElements.tableLengthTitle);
         DOMElements.div.appendChild(DOMElements.table);
         DOMElements.modalBody.appendChild(DOMElements.div);
-        
+
         DOMElements.tableLengthTitle.innerHTML = length + " X " + length;
         DOMElements.table.setAttribute("data-length", length);
 
@@ -144,7 +144,6 @@ function tableOptionClickHandler(METADATA, imgNames) {
             METADATA.length = elementClicked.getAttribute(tableLengthAttribute);
             document.getElementsByClassName("close")[0].dispatchEvent(new Event("click"));
             resetGame(METADATA, imgNames);
-
         };
     }
 }

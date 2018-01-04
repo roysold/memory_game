@@ -39,8 +39,8 @@ main * {
 }
 
 td img {
-    max-height: 80%;
-    max-width: 80%;
+    max-height: 75%;
+    max-width: 75%;
 }
 
 #timer {
@@ -85,7 +85,13 @@ aside>* {
     min-width: 75px;
     min-height: 70px;
     border-radius: 5px;
-    font-size: 1em;
+    font-size: 3vmin;
+}
+
+@media all and (max-width: 500px), all and (max-height: 500px) {
+    .menu-button {
+        font-size: 1em;
+    }
 }
 
 #startGame {
@@ -271,7 +277,7 @@ aside>* {
         top: -5vmin;
     }
     75% {
-        background-color: #2d841f;
+        background-color: red;
         left: 0px;
         top: 3vmin;
     }
@@ -300,7 +306,7 @@ aside>* {
         top: 5vmin;
     }
     75% {
-        background-color: #2d841f;
+        background-color: blue;
         left: 0px;
         top: -3vmin;
     }
