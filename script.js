@@ -94,8 +94,7 @@ function initModalBody(METADATA) {
         DOMElements.div.appendChild(DOMElements.table);
         DOMElements.modalBody.appendChild(DOMElements.div);
 
-        DOMElements.table.setAttribute("id", "tableOption" + length);
-        DOMElements.table.setAttribute("data-length-value", length);
+        DOMElements.table.setAttribute("data-length", length);
 
         for (let rowIndex = 0; rowIndex < length; rowIndex++) {
             let curRow = DOMElements.table.insertRow();
@@ -134,7 +133,7 @@ function tableOptionClickHandler(METADATA, imgNames) {
         element.onclick = function chooseLength(event) {
 
             let elementClicked = event.target;
-            let tableLengthAttribute = "data-length-value";
+            let tableLengthAttribute = "data-length";
 
             // Find table element of cell clicked.
             while (!elementClicked.getAttribute(tableLengthAttribute)) {
@@ -172,9 +171,11 @@ function resetGame(METADATA, imgNames) {
 function startButtonEventHandler(METADATA, imgNames, values) {
     return function startButtonClick(eventHandler) {
         displayAllCellsTemporarily(2000, METADATA, function () {
-            let shuffledCells = matrixWithInsertedValues(shuffled(values), imgNames);
-            initBoardUI(METADATA, shuffledCells);
+            triggerAllCellsDisplay(true, METADATA);
+
             animateShuffle(METADATA, function () {
+                let shuffledCells = matrixWithInsertedValues(shuffled(values), imgNames);
+                initBoardUI(METADATA, shuffledCells);
                 addCellClickEventHandlers(METADATA, shuffledCells);
                 setCursorToPointer(METADATA.tableId);
             });
@@ -195,6 +196,7 @@ function animateShuffle(METADATA, callback) {
         row.classList.add(rowIndex % 2 == 0 ? "even-row" : "odd-row");
         Array.from(row.cells).forEach(function (cell, cellIndex) {
             cell.classList.add(cellIndex % 2 == 0 ? "even-cell" : "odd-cell");
+            cell.firstChild.classList.add("fade");
         });
     });
 
@@ -205,7 +207,6 @@ function displayAllCellsTemporarily(milliseconds, METADATA, callback) {
     triggerAllCellsDisplay(true, METADATA);
 
     setTimeout(function () {
-        triggerAllCellsDisplay(false, METADATA);
         callback();
     }, milliseconds);
 }
@@ -238,8 +239,8 @@ function isEmpty(obj) {
 
 function initCellImg(cellDOM, cellObj, METADATA) {
     let imgElement = document.createElement("img");
-    imgElement.setAttribute("src", cellObj.imgURL);
     imgElement.style.display = METADATA.displayNoneStyle;
+    imgElement.setAttribute("src", cellObj.imgURL);
 
     cellDOM.appendChild(imgElement);
 }
@@ -321,11 +322,8 @@ function matrixWithInsertedValues(values, imgNames) {
 function triggerCellClick(cell, METADATA) {
     cell.clicks++;
 
-    if (!cell.pairFound &&
-        !(METADATA.guessCells.length === 1 && cell.row === METADATA.guessCells[0].row && cell.column === METADATA.guessCells[0].column)) {
-
+    if (isCellClickable(cell, METADATA.guessCells)) {
         if (METADATA.guessCells.length === 2) {
-
             if (!METADATA.guessCells[0].pairFound) {
                 toggleCellDisplay(false, METADATA.guessCells[0], METADATA);
                 toggleCellDisplay(false, METADATA.guessCells[1], METADATA);
@@ -352,6 +350,11 @@ function triggerCellClick(cell, METADATA) {
     }
 }
 
+function isCellClickable(cell, guessCells) {
+    // True if cell's pair hasn't been found and if cell isn't already guessed in the current guess.
+    return !cell.pairFound && !(guessCells.length === 1 && guessCells.indexOf(cell) >= 0);
+}
+
 function endGame(hasWon, METADATA) {
     Array.from(document.querySelectorAll("#" + METADATA.tableId + " td")).forEach(function (cell) {
         cell.onclick = undefined;
@@ -365,7 +368,10 @@ function displayResult(hasWon, METADATA) {
     let textColor = "";
     let resultText = "";
 
-    if (hasWon) {
+    if (!hasWon) {
+        textColor = "red";
+        resultText = "You lost because you suck.";
+    } else {
         textColor = "green";
 
         let timeValues = new Date(new Date(METADATA.twoMinsInMS) - METADATA.countDown)
@@ -379,14 +385,11 @@ function displayResult(hasWon, METADATA) {
             (mins === 0 ? "" : mins + " min ") +
             (secs === 0 ? "" : secs + " sec") +
             ".";
-
-    } else {
-        textColor = "red";
-        resultText = "You lost because you suck.";
     }
 
-    document.getElementById(METADATA.resultId).style.color = textColor;
-    document.getElementById(METADATA.resultId).innerHTML = resultText;
+    let resultDOMElement = document.getElementById(METADATA.resultId);
+    resultDOMElement.style.color = textColor;
+    resultDOMElement.innerHTML = resultText;
 }
 
 function toggleCellDisplay(toDisplay, cell, METADATA) {

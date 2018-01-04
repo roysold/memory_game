@@ -5,7 +5,7 @@ html {
 main {
     display: flex;
     width: 90vw;
-    height: 90vh;
+    height: 95vh;
     flex-wrap: wrap;
     margin: auto;
 }
@@ -18,6 +18,7 @@ main * {
     display: flex;
     flex-direction: column;
 }
+
 
 #game-board tr {
     height: 10vmin;
@@ -57,8 +58,16 @@ aside>* {
 }
 
 #result {
-    font-size: 1.25em;
+    font-size: 3vmin;
+    min-width: 30vmin;
 }
+
+@media all and (max-width: 400px), all and (max-height: 400px) {
+    #result {
+        font-size: 1em;
+    }
+}
+
 
 #details {
     display: flex;
@@ -82,6 +91,7 @@ aside>* {
 #startGame {
     border: 3px solid #236818;
     background-color: #3aaa29;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 #startGame:disabled {
@@ -97,6 +107,7 @@ aside>* {
     background-color: #f4e842;
     font-family: Verdana, sans-serif;
     cursor: pointer;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 #chooseBoard:hover {
@@ -141,7 +152,6 @@ aside>* {
 .modal-header {
     padding: 2px 16px;
     height: 10vh;
-    /*min-height: 10px;*/
     background-color: #1d7d82;
     color: white;
 }
@@ -194,23 +204,27 @@ aside>* {
 }
 
 .even-row {
-    animation: spin 2s;
+    animation: spin 3s;
     animation-iteration-count: 1;
 }
 
 .odd-row {
-    animation: backspin 1s linear;
-    animation-iteration-count: 2;
+    animation: backspin 3s;
+    animation-iteration-count: 1;
 }
 
 .even-cell {
-    animation: backspin-move 2.5s;
+    animation: backspin-move 3s;
     animation-iteration-count: 1;
 }
 
 .odd-cell {
-    animation: spin-move 2.5s;
+    animation: spin-move 3s;
     animation-iteration-count: 1;
+}
+
+.fade {
+    animation: fade 3s;
 }
 
 @keyframes spin {
@@ -227,58 +241,66 @@ aside>* {
 
 @keyframes spin-move {
     0% {
-        /*background-color: red;*/
         left: 0px;
         top: 0px;
     }
     25% {
-        /*background-color: yellow;*/
+        background-color: yellow;
         left: 3vmin;
         top: 0px;
     }
     50% {
-        /*background-color: blue;*/
+        background-color: blue;
         left: -3vmin;
         top: -5vmin;
     }
     75% {
-        /*background-color: green;*/
+        background-color: #2d841f;
         left: 0px;
         top: 3vmin;
     }
     100% {
-        /*background-color: red;*/
+        background-color: #2d841f;
         left: 0px;
         top: 0px;
         transform: rotate(360deg);
+        opacity: 1;
     }
 }
 
 @keyframes backspin-move {
     0% {
-        /*background-color: red;*/
         left: 0px;
         top: 0px;
     }
     25% {
-        /*background-color: yellow;*/
+        background-color: red;
         left: -3vmin;
         top: 0px;
     }
     50% {
-        /*background-color: blue;*/
+        background-color: yellow;
         left: 3vmin;
         top: 5vmin;
     }
     75% {
-        /*background-color: green;*/
+        background-color: #2d841f;
         left: 0px;
         top: -3vmin;
     }
     100% {
-        /*background-color: red;*/
+        background-color: #2d841f;
         left: 0px;
         top: 0px;
         transform: rotate(-360deg);
+    }
+}
+
+@keyframes fade {
+    0% {
+        opacity: 1;
+    }
+    50%, 100% {
+        opacity: 0;
     }
 }
