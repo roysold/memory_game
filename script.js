@@ -1,6 +1,5 @@
 "use strict"
 
-
 window.onload = function init() {
     const METADATA = {
         length: 4,
@@ -157,6 +156,7 @@ function resetGame(METADATA, imgNames) {
     METADATA.guessCells = [];
     METADATA.revealed = 0;
 
+    document.getElementById(METADATA.timerId).style.display = "";
     document.getElementById(METADATA.timerId).innerHTML = dateFormatString(new Date(METADATA.twoMinsInMS));
     document.getElementById(METADATA.startButtonId).disabled = false;
     setCursorToPointer(METADATA.startButtonId);
@@ -364,6 +364,7 @@ function endGame(hasWon, METADATA) {
     });
 
     setCursorToNotAllowed(METADATA.tableId);
+    document.getElementById(METADATA.timerId).style.display = METADATA.displayNoneStyle;
     displayResult(hasWon, METADATA);
 }
 
@@ -373,7 +374,7 @@ function displayResult(hasWon, METADATA) {
 
     if (!hasWon) {
         textColor = "red";
-        resultText = "You lost because you suck.";
+        resultText = "You suck.";
     } else {
         textColor = "green";
 
