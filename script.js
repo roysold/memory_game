@@ -93,7 +93,8 @@ function initModalBody(METADATA) {
         DOMElements.div.appendChild(DOMElements.tableLengthTitle);
         DOMElements.div.appendChild(DOMElements.table);
         DOMElements.modalBody.appendChild(DOMElements.div);
-
+        
+        DOMElements.tableLengthTitle.innerHTML = length + " X " + length;
         DOMElements.table.setAttribute("data-length", length);
 
         for (let rowIndex = 0; rowIndex < length; rowIndex++) {

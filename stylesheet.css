@@ -160,6 +160,12 @@ aside>* {
     font-size: 5vmin;
 }
 
+@media all and (max-width: 300px), all and (max-height: 300px) {
+    .modal-header>* {
+        font-size: 0.5em;
+    }
+}
+
 .modal-body {
     padding: 2px 16px;
     height: 50vh;
@@ -189,11 +195,21 @@ aside>* {
 
 .modal-body td {
     border: 1px solid black;
-    width: 2vmin;
+    width: 3vmin;
 }
 
 .modal-body tr {
-    height: 2vmin;
+    height: 3vmin;
+}
+
+.modal-body h3 {
+    font-size: 4vmin;
+}
+
+@media all and (max-width: 300px), all and (max-height: 300px) {
+    .modal-body h3 {
+        font-size: 0.5em;
+    }
 }
 
 /*Animation*/
