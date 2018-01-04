@@ -64,7 +64,10 @@ function initElements(METADATA) {
     document.getElementById(METADATA.startButtonId).disabled = true;
     setCursorToNotAllowed(METADATA.startButtonId);
     setCursorToPointer(METADATA.chooseBoardButtonId);
-    document.getElementById(METADATA.timerId).innerHTML = new Date(METADATA.twoMinsInMS).toUTCString().split(" ")[4];
+    document.getElementById(METADATA.timerId).innerHTML = dateFormatString(new Date(METADATA.twoMinsInMS));
+}
+function dateFormatString(date) {
+    return date.toUTCString().split(" ")[4].substring(3);
 }
 
 function changeCursorStyle(elementId, cursorStyle) {
@@ -154,7 +157,7 @@ function resetGame(METADATA, imgNames) {
     METADATA.guessCells = [];
     METADATA.revealed = 0;
 
-    document.getElementById(METADATA.timerId).innerHTML = new Date(METADATA.twoMinsInMS).toUTCString().split(" ")[4];
+    document.getElementById(METADATA.timerId).innerHTML = dateFormatString(new Date(METADATA.twoMinsInMS));
     document.getElementById(METADATA.startButtonId).disabled = false;
     setCursorToPointer(METADATA.startButtonId);
     document.getElementById(METADATA.resultId).innerHTML = "";
@@ -261,7 +264,7 @@ function setTimer(METADATA) {
         METADATA.countDown = new Date(METADATA.twoMinsInMS);
         METADATA.refreshTimer = setInterval(function () {
             METADATA.countDown = new Date(METADATA.countDown.getTime() - 1000);
-            document.getElementById(METADATA.timerId).innerHTML = METADATA.countDown.toUTCString().split(' ')[4];
+            document.getElementById(METADATA.timerId).innerHTML = dateFormatString(METADATA.countDown);
 
             if (METADATA.countDown.getTime() === 0) {
                 clearInterval(METADATA.refreshTimer);
@@ -374,12 +377,9 @@ function displayResult(hasWon, METADATA) {
     } else {
         textColor = "green";
 
-        let timeValues = new Date(new Date(METADATA.twoMinsInMS) - METADATA.countDown)
-            .toUTCString()
-            .split(" ")[4]
-            .split(":");
-        let mins = parseInt(timeValues[1]);
-        let secs = parseInt(timeValues[2]);
+        let timeValues = dateFormatString(new Date(new Date(METADATA.twoMinsInMS) - METADATA.countDown)).split(":");
+        let mins = parseInt(timeValues[0]);
+        let secs = parseInt(timeValues[1]);
 
         resultText = "Good job! It took you " +
             (mins === 0 ? "" : mins + " min ") +

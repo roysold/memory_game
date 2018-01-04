@@ -19,7 +19,6 @@ main * {
     flex-direction: column;
 }
 
-
 #game-board tr {
     height: 10vmin;
 }
@@ -28,6 +27,7 @@ main * {
     border: 3px solid #2d841f;
     border-radius: 10%;
     width: 10vmin;
+    min-width: 10px;
     text-align: center;
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
     background-color: #3aaa29;
@@ -67,7 +67,6 @@ aside>* {
         font-size: 1em;
     }
 }
-
 
 #details {
     display: flex;
