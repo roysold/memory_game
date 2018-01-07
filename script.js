@@ -13,7 +13,8 @@ window.onload = function () {
         resultId: "result",
         gameLengths: [4, 6, 8],
         modalBodyClass: "modal-body",
-        numberOfCellsInSet: 2
+        numberOfCellsInSet: 2,
+        timerIntervalInMS: 1000
     };
 
     let gameSessionData = {
@@ -108,7 +109,6 @@ window.onload = function () {
     }
 
     function chooseLength(event) {
-
         let elementClicked = event.target;
         let tableLengthAttribute = "data-length";
 
@@ -243,7 +243,8 @@ window.onload = function () {
     function setTimer() {
         gameSessionData.countDown = new Date(METADATA.timePerGameInMS);
         gameSessionData.refreshTimer = setInterval(function () {
-            gameSessionData.countDown = new Date(gameSessionData.countDown.getTime() - 1000);
+            gameSessionData.countDown = new Date(
+                gameSessionData.countDown.getTime() - METADATA.timerIntervalInMS);
             document.getElementById(METADATA.timerId).innerHTML =
                 dateFormatString(gameSessionData.countDown);
 
@@ -251,7 +252,7 @@ window.onload = function () {
                 clearInterval(gameSessionData.refreshTimer);
                 endGame(false);
             }
-        }, 1000);
+        }, METADATA.timerIntervalInMS);
     }
 
     function gameValues(length) {
@@ -386,7 +387,7 @@ window.onload = function () {
 
         // True if cell's pair hasn't been found and if cell isn't
         // already guessed in the current guess.
-        return !cell.setFound && !cellAlreadyInCurrentGuessף
+        return !cell.setFound && !cellAlreadyInCurrentGuess;
     }
 
     function endGame(hasWon) {
