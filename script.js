@@ -14,7 +14,8 @@ window.onload = function () {
         gameLengths: [4, 6, 8],
         modalBodyClass: "modal-body",
         numberOfCellsInSet: 2,
-        timerIntervalInMS: 1000
+        timerIntervalInMS: 1000,
+        timeToShowCellsAtStartInMS: 2000
     };
 
     let gameSessionData = {
@@ -148,7 +149,7 @@ window.onload = function () {
 
     function startButtonEventHandler(values) {
         return function startButtonClick(eventHandler) {
-            displayAllCellsTemporarily(2000, function () {
+            displayAllCellsTemporarily(METADATA.timeToShowCellsAtStartInMS, function () {
                 triggerAllCellsDisplay(true);
 
                 animateShuffle(function () {
@@ -357,7 +358,6 @@ window.onload = function () {
             gameSessionData.guessedCells.push(cell);
 
             if (isSetFound()) {
-
                 gameSessionData.guessedCells.forEach(function (cell) {
                     cell.setFound = true;
                 })
