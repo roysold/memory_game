@@ -342,7 +342,7 @@ window.onload = function () {
 
         if (isCellClickable(cell, gameSessionData.guessedCells)) {
             if (gameSessionData.guessedCells.length === 2) {
-                if (!gameSessionData.guessedCells[0].pairFound) {
+                if (!gameSessionData.guessedCells[0].setFound) {
                     gameSessionData.guessedCells.forEach(function (cell) {
                         toggleCellDisplay(false, cell);
                     });
@@ -358,7 +358,7 @@ window.onload = function () {
             if (isSetFound()) {
 
                 gameSessionData.guessedCells.forEach(function (cell) {
-                    cell.pairFound = true;
+                    cell.setFound = true;
                 })
 
                 gameSessionData.revealed += gameSessionData.guessedCells.length;
@@ -379,11 +379,14 @@ window.onload = function () {
             METADATA.length * METADATA.length - gameSessionData.guessedCells.length
     }
 
-    function isCellClickable(cell, guessCells) {
+    function isCellClickable(cell) {
+        let cellAlreadyInCurrentGuess =
+            gameSessionData.guessedCells.length < METADATA.numberOfCellsInSet &&
+            gameSessionData.guessedCells.indexOf(cell) != -1;
+
         // True if cell's pair hasn't been found and if cell isn't
         // already guessed in the current guess.
-        return !cell.pairFound &&
-            !(guessCells.length === 1 && guessCells.indexOf(cell) >= 0);
+        return !cell.setFound && !cellAlreadyInCurrentGuessף
     }
 
     function endGame(hasWon) {
@@ -438,8 +441,8 @@ window.onload = function () {
 
         if (gameSessionData.guessedCells.length === METADATA.numberOfCellsInSet) {
             for (let index = 1; index < gameSessionData.guessedCells.length; index++) {
-                if (gameSessionData.guessedCells[index - 1].value !==
-                    gameSessionData.guessedCells[index].value) {
+                if (gameSessionData.guessedCells[index - 1].imgURL !==
+                    gameSessionData.guessedCells[index].imgURL) {
                     setFound = false;
                 }
             }
@@ -456,6 +459,6 @@ window.onload = function () {
         this.row = row;
         this.column = column;
         this.clicks = 0;
-        this.pairFound = false;
+        this.setFound = false;
     }
 }();
