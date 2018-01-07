@@ -1,6 +1,6 @@
 "use strict"
 
-window.onload = function init() {
+window.onload = function () {
     const METADATA = {
         length: 4,
         tableId: "game-board",
@@ -13,409 +13,449 @@ window.onload = function init() {
         resultId: "result",
         gameLengths: [4, 6, 8],
         modalBodyClass: "modal-body",
+        numberOfCellsInSet: 2
+    };
+
+    let gameSessionData = {
         guessedCells: [],
         revealed: 0,
         refreshTimer: undefined,
         countDown: undefined
+    };
+
+    return function init() {
+        initElements()
+        initModalBody();
+        setPageEventHandlers();
     }
 
-    initElements(METADATA)
-    initModalBody(METADATA);
-    setPageEventHandlers(METADATA);
-}
+    function initElements() {
+        document.getElementById(METADATA.startButtonId).disabled = true;
+        setCursorToNotAllowed(METADATA.startButtonId);
+        setCursorToPointer(METADATA.chooseBoardButtonId);
+        document.getElementById(METADATA.timerId).innerHTML =
+            dateFormatString(new Date(METADATA.timePerGameInMS));
+    }
 
-function initElements(METADATA) {
-    document.getElementById(METADATA.startButtonId).disabled = true;
-    setCursorToNotAllowed(METADATA.startButtonId);
-    setCursorToPointer(METADATA.chooseBoardButtonId);
-    document.getElementById(METADATA.timerId).innerHTML = dateFormatString(new Date(METADATA.timePerGameInMS));
-}
+    function dateFormatString(date) {
+        let mins = date.getMinutes();
+        let secs = date.getSeconds();
 
-function dateFormatString(date) {
-    let mins = date.getMinutes();
-    let secs = date.getSeconds();
+        return (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
+    }
 
-    return (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
-}
+    function changeCursorStyle(elementId, cursorStyle) {
+        document.getElementById(elementId).style.cursor = cursorStyle;
+    }
 
-function changeCursorStyle(elementId, cursorStyle) {
-    document.getElementById(elementId).style.cursor = cursorStyle;
-}
+    function setCursorToPointer(elementId) {
+        changeCursorStyle(elementId, "pointer");
+    }
 
-function setCursorToPointer(elementId) {
-    changeCursorStyle(elementId, "pointer");
-}
+    function setCursorToNotAllowed(elementId) {
+        changeCursorStyle(elementId, "not-allowed");
+    }
 
-function setCursorToNotAllowed(elementId) {
-    changeCursorStyle(elementId, "not-allowed");
-}
+    function initModalBody() {
+        METADATA.gameLengths.forEach(function (length) {
+            let DOMElements = {
+                modalBody: document.getElementsByClassName(METADATA.modalBodyClass)[0],
+                div: document.createElement("div"),
+                tableLengthTitle: document.createElement("h3"),
+                table: document.createElement("table")
+            };
 
-function initModalBody(METADATA) {
+            // modal > div > h3, table
+            DOMElements.div.appendChild(DOMElements.tableLengthTitle);
+            DOMElements.div.appendChild(DOMElements.table);
+            DOMElements.modalBody.appendChild(DOMElements.div);
 
-    METADATA.gameLengths.forEach(function (length) {
-        let DOMElements = {
-            modalBody: document.getElementsByClassName(METADATA.modalBodyClass)[0],
-            div: document.createElement("div"),
-            tableLengthTitle: document.createElement("h3"),
-            table: document.createElement("table")
+            DOMElements.tableLengthTitle.innerHTML = length + " X " + length;
+            DOMElements.table.setAttribute("data-length", length);
+
+            for (let rowIndex = 0; rowIndex < length; rowIndex++) {
+                let curRow = DOMElements.table.insertRow();
+
+                for (let colIndex = 0; colIndex < length; colIndex++) {
+                    curRow.insertCell();
+                }
+            }
+        });
+    }
+
+    function setPageEventHandlers() {
+        document.getElementById(METADATA.chooseBoardButtonId).onclick = function () {
+            document.getElementById(METADATA.optionsModalId).style.display = "block";
+            document.getElementById(METADATA.chooseBoardButtonId).innerHTML = "Reset";
         };
 
-        // modal > div > h3, table
-        DOMElements.div.appendChild(DOMElements.tableLengthTitle);
-        DOMElements.div.appendChild(DOMElements.table);
-        DOMElements.modalBody.appendChild(DOMElements.div);
+        document.getElementsByClassName("close")[0].onclick = function () {
+            document.getElementById(METADATA.optionsModalId).style.display = METADATA.displayNoneStyle;
+        };
 
-        DOMElements.tableLengthTitle.innerHTML = length + " X " + length;
-        DOMElements.table.setAttribute("data-length", length);
+        Array.from(document.querySelectorAll("." + METADATA.modalBodyClass + " table"))
+            .forEach(function (element) {
+                element.onclick = chooseLength;
+            });
 
-        for (let rowIndex = 0; rowIndex < length; rowIndex++) {
-            let curRow = DOMElements.table.insertRow();
+        window.onclick = function (event) {
+            let modal = document.getElementById(METADATA.optionsModalId);
 
-            for (let colIndex = 0; colIndex < length; colIndex++) {
-                curRow.insertCell();
+            if (event.target === modal) {
+                modal.style.display = METADATA.displayNoneStyle;
             }
         }
-    });
-}
+    }
 
-function setPageEventHandlers(METADATA) {
-    document.getElementById(METADATA.chooseBoardButtonId).onclick = function () {
-        document.getElementById(METADATA.optionsModalId).style.display = "block";
-        document.getElementById(METADATA.chooseBoardButtonId).innerHTML = "Reset";
-    };
+    function chooseLength(event) {
 
-    document.getElementsByClassName("close")[0].onclick = function () {
-        document.getElementById(METADATA.optionsModalId).style.display = METADATA.displayNoneStyle;
-    };
+        let elementClicked = event.target;
+        let tableLengthAttribute = "data-length";
 
-    Array.from(document.querySelectorAll("." + METADATA.modalBodyClass + " table"))
-        .forEach(function (element) {
-            element.onclick = chooseLength.bind({ METADATA: METADATA });
-        });
+        // Find table element of cell clicked.
+        while (!elementClicked.getAttribute(tableLengthAttribute)) {
+            elementClicked = elementClicked.parentNode;
+        }
 
-    window.onclick = function (event) {
-        let modal = document.getElementById(METADATA.optionsModalId);
+        METADATA.length = elementClicked.getAttribute(tableLengthAttribute);
+        document.getElementsByClassName("close")[0].dispatchEvent(new Event("click"));
+        resetGame();
+    }
 
-        if (event.target === modal) {
-            modal.style.display = METADATA.displayNoneStyle;
+    function resetGame() {
+        clearInterval(gameSessionData.refreshTimer);
+        gameSessionData.countDown = undefined;
+        gameSessionData.guessedCells = [];
+        gameSessionData.revealed = 0;
+
+        document.getElementById(METADATA.timerId).style.display = "";
+        document.getElementById(METADATA.timerId).innerHTML = dateFormatString(
+            new Date(METADATA.timePerGameInMS)
+        );
+        document.getElementById(METADATA.startButtonId).disabled = false;
+        setCursorToPointer(METADATA.startButtonId);
+        document.getElementById(METADATA.resultId).innerHTML = "";
+        document.getElementById(METADATA.tableId).innerHTML = "";
+        setCursorToNotAllowed(METADATA.tableId);
+
+        let values = gameValues(METADATA.length);
+        let cells = insertValuesIntoMatrix(values);
+        document.getElementById(METADATA.startButtonId).onclick =
+            startButtonEventHandler(values);
+
+        initBoardUI(cells);
+    }
+
+    function startButtonEventHandler(values) {
+        return function startButtonClick(eventHandler) {
+            displayAllCellsTemporarily(2000, function () {
+                triggerAllCellsDisplay(true);
+
+                animateShuffle(function () {
+                    let shuffledCells = insertValuesIntoMatrix(shuffle(values));
+                    initBoardUI(shuffledCells);
+                    addCellClickEventHandlers(shuffledCells);
+                    setCursorToPointer(METADATA.tableId);
+                });
+            });
+
+            // Remove this handler.
+            eventHandler.target.removeEventListener(eventHandler.type, startButtonClick);
+            eventHandler.target.disabled = true;
+            setCursorToNotAllowed(eventHandler.target.getAttribute("id"));
         }
     }
-}
 
-function chooseLength(event) {
+    function animateShuffle(callback) {
+        let tableDOMElement = document.getElementById(METADATA.tableId);
+        tableDOMElement.classList.add("table-spin");
 
-    let elementClicked = event.target;
-    let tableLengthAttribute = "data-length";
+        Array.from(tableDOMElement.rows).forEach(function (row, rowIndex) {
+            row.classList.add(rowIndex % 2 == 0 ? "even-row" : "odd-row");
 
-    // Find table element of cell clicked.
-    while (!elementClicked.getAttribute(tableLengthAttribute)) {
-        elementClicked = elementClicked.parentNode;
-    }
-
-    this.METADATA.length = elementClicked.getAttribute(tableLengthAttribute);
-    document.getElementsByClassName("close")[0].dispatchEvent(new Event("click"));
-    resetGame(this.METADATA);
-}
-
-function resetGame(METADATA) {
-    clearInterval(METADATA.refreshTimer);
-    METADATA.countDown = undefined;
-    METADATA.guessCells = [];
-    METADATA.revealed = 0;
-
-    document.getElementById(METADATA.timerId).style.display = "";
-    document.getElementById(METADATA.timerId).innerHTML = dateFormatString(new Date(METADATA.timePerGameInMS));
-    document.getElementById(METADATA.startButtonId).disabled = false;
-    setCursorToPointer(METADATA.startButtonId);
-    document.getElementById(METADATA.resultId).innerHTML = "";
-    document.getElementById(METADATA.tableId).innerHTML = "";
-    setCursorToNotAllowed(METADATA.tableId);
-
-    let values = gameValues(METADATA.length);
-    let cells = matrixWithInsertedValues(values);
-    document.getElementById(METADATA.startButtonId).onclick =
-        startButtonEventHandler(METADATA, values);
-
-    initBoardUI(METADATA, cells);
-}
-
-function startButtonEventHandler(METADATA, values) {
-    return function startButtonClick(eventHandler) {
-        displayAllCellsTemporarily(2000, METADATA, function () {
-            triggerAllCellsDisplay(true, METADATA);
-
-            animateShuffle(METADATA, function () {
-                let shuffledCells = matrixWithInsertedValues(shuffled(values));
-                initBoardUI(METADATA, shuffledCells);
-                addCellClickEventHandlers(METADATA, shuffledCells);
-                setCursorToPointer(METADATA.tableId);
+            Array.from(row.cells).forEach(function (cell, cellIndex) {
+                cell.classList.add(cellIndex % 2 == 0 ? "even-cell" : "odd-cell");
+                cell.firstChild.classList.add("fade");
             });
         });
 
-        // Remove this handler.
-        eventHandler.target.removeEventListener(eventHandler.type, startButtonClick);
-        eventHandler.target.disabled = true;
-        setCursorToNotAllowed(eventHandler.target.getAttribute("id"));
+        document.getElementById(METADATA.tableId).addEventListener(
+            "animationend",
+            callback,
+            false
+        );
     }
-}
 
-function animateShuffle(METADATA, callback) {
-    let tableDOMElement = document.getElementById(METADATA.tableId);
-    tableDOMElement.classList.add("table-spin");
+    function displayAllCellsTemporarily(milliseconds, callback) {
+        triggerAllCellsDisplay(true);
+        setTimeout(callback, milliseconds);
+    }
 
-    Array.from(tableDOMElement.rows).forEach(function (row, rowIndex) {
-        row.classList.add(rowIndex % 2 == 0 ? "even-row" : "odd-row");
+    function triggerAllCellsDisplay(toShow) {
+        const displayValue = toShow ? "" : METADATA.displayNoneStyle;
 
-        Array.from(row.cells).forEach(function (cell, cellIndex) {
-            cell.classList.add(cellIndex % 2 == 0 ? "even-cell" : "odd-cell");
-            cell.firstChild.classList.add("fade");
+        Array.from(document.querySelectorAll("#" + METADATA.tableId + " td img"))
+            .forEach(function (img) {
+                img.style.display = displayValue;
+            });
+    }
+
+    function initBoardUI(cells) {
+        let table = document.getElementById(METADATA.tableId);
+        table.innerHTML = "";
+
+        cells.forEach(function (row, rowIndex) {
+            let rowDOM = table.insertRow(rowIndex);
+
+            row.forEach(function (cell, cellIndex) {
+                let cellDOM = rowDOM.insertCell();
+                initCellImg(cellDOM, cells[rowIndex][cellIndex]);
+            })
         });
-    });
+    }
 
-    document.getElementById(METADATA.tableId).addEventListener(
-        "animationend",
-        callback,
-        false
-    );
-}
+    function initCellImg(cellDOM, cellObj) {
+        let imgElement = document.createElement("img");
+        imgElement.style.display = METADATA.displayNoneStyle;
+        imgElement.setAttribute("src", cellObj.imgURL);
 
-function displayAllCellsTemporarily(milliseconds, METADATA, callback) {
-    triggerAllCellsDisplay(true, METADATA);
-    setTimeout(callback, milliseconds);
-}
+        cellDOM.appendChild(imgElement);
+    }
 
-function triggerAllCellsDisplay(toShow, METADATA) {
-    const displayValue = toShow ? "" : METADATA.displayNoneStyle;
+    function addCellClickEventHandlers(cells) {
+        Array.from(document.getElementById(METADATA.tableId).rows).forEach(
+            function (row, rowIndex) {
+                Array.from(row.cells).forEach(
+                    function (cell, cellIndex) {
+                        cell.onclick = function cellClickHandler() {
+                            if (gameSessionData.countDown === undefined) {
+                                setTimer();
+                            }
 
-    Array.from(document.querySelectorAll("#" + METADATA.tableId + " td img"))
-        .forEach(function (img) {
-            img.style.display = displayValue;
-        });
-}
+                            triggerCellClick(cells[rowIndex][cellIndex]);
+                        };
+                    }
+                );
+            }
+        );
+    }
 
-function initBoardUI(METADATA, cells) {
-    let table = document.getElementById(METADATA.tableId);
-    table.innerHTML = "";
+    function setTimer() {
+        gameSessionData.countDown = new Date(METADATA.timePerGameInMS);
+        gameSessionData.refreshTimer = setInterval(function () {
+            gameSessionData.countDown = new Date(gameSessionData.countDown.getTime() - 1000);
+            document.getElementById(METADATA.timerId).innerHTML =
+                dateFormatString(gameSessionData.countDown);
 
-    cells.forEach(function (row, rowIndex) {
-        let rowDOM = table.insertRow(rowIndex);
+            if (gameSessionData.countDown.getTime() === 0) {
+                clearInterval(gameSessionData.refreshTimer);
+                endGame(false);
+            }
+        }, 1000);
+    }
 
-        row.forEach(function (cell, cellIndex) {
-            let cellDOM = rowDOM.insertCell();
-            initCellImg(cellDOM, cells[rowIndex][cellIndex], METADATA);
-        })
-    });
-}
+    function gameValues(length) {
+        let values = [];
 
-function initCellImg(cellDOM, cellObj, METADATA) {
-    let imgElement = document.createElement("img");
-    imgElement.style.display = METADATA.displayNoneStyle;
-    imgElement.setAttribute("src", cellObj.imgURL);
+        // Twice push() because memory game holds each value twice.
+        for (let index = 0; index < (length * length / 2); index++) {
+            values.push(index);
+            values.push(index);
+        }
 
-    cellDOM.appendChild(imgElement);
-}
+        return values;
+    }
 
-function addCellClickEventHandlers(METADATA, cells) {
-    Array.from(document.getElementById(METADATA.tableId).rows).forEach(function (row, rowIndex) {
-        Array.from(row.cells).forEach(function (cell, cellIndex) {
-            cell.onclick = function cellClickHandler() {
-                if (METADATA.countDown === undefined) {
-                    setTimer(METADATA);
+    function shuffle(arr) {
+        let arrCopy = arr.slice();
+        let shuffled = [];
+
+        for (let index = 0; index < arr.length; index++) {
+            let randomPlace = Math.floor(Math.random() * arrCopy.length);
+            shuffled.push(arrCopy.splice(randomPlace, 1)[0]);
+        }
+
+        return shuffled;
+    }
+
+    function insertValuesIntoMatrix(values) {
+        const imgNames = {
+            0: "1.png",
+            1: "2.png",
+            2: "3.png",
+            3: "4.png",
+            4: "5.png",
+            5: "6.png",
+            6: "7.png",
+            7: "8.png",
+            8: "1.png",
+            9: "2.png",
+            10: "3.png",
+            11: "4.png",
+            12: "5.png",
+            13: "6.png",
+            14: "7.png",
+            15: "8.png",
+            16: "1.png",
+            17: "2.png",
+            18: "3.png",
+            19: "4.png",
+            20: "5.png",
+            21: "6.png",
+            22: "7.png",
+            23: "8.png",
+            24: "1.png",
+            25: "2.png",
+            26: "3.png",
+            27: "4.png",
+            28: "5.png",
+            29: "6.png",
+            30: "7.png",
+            31: "8.png",
+        };
+
+        let matrix = [];
+        let valuesCopy = values.slice();
+        const imagesDirectory = "images";
+        const length = Math.sqrt(values.length);
+
+        for (let rowIndex = 0; rowIndex < length; rowIndex++) {
+            matrix.push([]);
+
+            for (let colIndex = 0; colIndex < length; colIndex++) {
+                let value = valuesCopy.pop();
+
+                matrix[rowIndex].push(new Tile(
+                    value,
+                    imagesDirectory + "/" + imgNames[value],
+                    rowIndex,
+                    colIndex
+                ));
+            }
+        }
+
+        return matrix;
+    }
+
+    function triggerCellClick(cell) {
+        cell.clicks++;
+
+        if (isCellClickable(cell, gameSessionData.guessedCells)) {
+            if (gameSessionData.guessedCells.length === 2) {
+                if (!gameSessionData.guessedCells[0].pairFound) {
+                    gameSessionData.guessedCells.forEach(function (cell) {
+                        toggleCellDisplay(false, cell);
+                    });
                 }
 
-                triggerCellClick(cells[rowIndex][cellIndex], METADATA);
-            };
-        });
-    });
-}
-
-function setTimer(METADATA) {
-    METADATA.countDown = new Date(METADATA.timePerGameInMS);
-    METADATA.refreshTimer = setInterval(function () {
-        METADATA.countDown = new Date(METADATA.countDown.getTime() - 1000);
-        document.getElementById(METADATA.timerId).innerHTML = dateFormatString(METADATA.countDown);
-
-        if (METADATA.countDown.getTime() === 0) {
-            clearInterval(METADATA.refreshTimer);
-            endGame(false, METADATA);
-        }
-    }, 1000);
-}
-
-function gameValues(length) {
-    let values = [];
-
-    // Twice push() because memory game holds each value twice.
-    for (let index = 0; index < (length * length / 2); index++) {
-        values.push(index);
-        values.push(index);
-    }
-
-    return values;
-}
-
-function shuffled(arr) {
-    let arrCopy = arr.slice();
-    let shuffled = [];
-
-    for (let index = 0; index < arr.length; index++) {
-        let randomPlace = Math.floor(Math.random() * arrCopy.length);
-        shuffled.push(arrCopy.splice(randomPlace, 1)[0]);
-    }
-
-    return shuffled;
-}
-
-function matrixWithInsertedValues(values) {
-
-    const imgNames = {
-        0: "1.png",
-        1: "2.png",
-        2: "3.png",
-        3: "4.png",
-        4: "5.png",
-        5: "6.png",
-        6: "7.png",
-        7: "8.png",
-        8: "1.png",
-        9: "2.png",
-        10: "3.png",
-        11: "4.png",
-        12: "5.png",
-        13: "6.png",
-        14: "7.png",
-        15: "8.png",
-        16: "1.png",
-        17: "2.png",
-        18: "3.png",
-        19: "4.png",
-        20: "5.png",
-        21: "6.png",
-        22: "7.png",
-        23: "8.png",
-        24: "1.png",
-        25: "2.png",
-        26: "3.png",
-        27: "4.png",
-        28: "5.png",
-        29: "6.png",
-        30: "7.png",
-        31: "8.png",
-    };
-
-    let matrix = [];
-    let valuesCopy = values.slice();
-    const imagesDirectory = "images";
-    const length = Math.sqrt(values.length);
-
-    for (let rowIndex = 0; rowIndex < length; rowIndex++) {
-        matrix.push([]);
-
-        for (let colIndex = 0; colIndex < length; colIndex++) {
-            let value = valuesCopy.pop();
-
-            matrix[rowIndex].push(new Tile(
-                value,
-                imagesDirectory + "/" + imgNames[value],
-                rowIndex,
-                colIndex
-            ));
-        }
-    }
-
-    return matrix;
-}
-
-function triggerCellClick(cell, METADATA) {
-    cell.clicks++;
-
-    if (isCellClickable(cell, METADATA.guessCells)) {
-        if (METADATA.guessCells.length === 2) {
-            if (!METADATA.guessCells[0].pairFound) {
-                METADATA.guessCells.forEach(function (cell) {
-                    toggleCellDisplay(false, cell, METADATA);
-                });
+                gameSessionData.guessedCells = [];
             }
 
-            METADATA.guessCells = [];
-        }
+            toggleCellDisplay(true, cell);
 
-        toggleCellDisplay(true, cell, METADATA);
+            gameSessionData.guessedCells.push(cell);
 
-        METADATA.guessCells.push(cell);
+            if (isSetFound()) {
 
-        if (isPairFound(METADATA)) {
+                gameSessionData.guessedCells.forEach(function (cell) {
+                    cell.pairFound = true;
+                })
 
-            METADATA.guessCells.forEach(function (cell) {
-                cell.pairFound = true;
-            })
+                gameSessionData.revealed += gameSessionData.guessedCells.length;
 
-            METADATA.revealed += METADATA.guessCells.length;
-
-            if (METADATA.revealed === METADATA.length * METADATA.length - METADATA.guessCells.length) {
-                clearInterval(METADATA.refreshTimer);
-                endGame(true, METADATA);
-                triggerAllCellsDisplay(true, METADATA)
+                if (playerHasWon()) {
+                    clearInterval(gameSessionData.refreshTimer);
+                    endGame(true);
+                    triggerAllCellsDisplay(true)
+                }
             }
         }
     }
-}
 
-function isCellClickable(cell, guessCells) {
-    // True if cell's pair hasn't been found and if cell isn't already guessed in the current guess.
-    return !cell.pairFound && !(guessCells.length === 1 && guessCells.indexOf(cell) >= 0);
-}
-
-function endGame(hasWon, METADATA) {
-    Array.from(document.querySelectorAll("#" + METADATA.tableId + " td")).forEach(function (cell) {
-        cell.onclick = undefined;
-    });
-
-    setCursorToNotAllowed(METADATA.tableId);
-    document.getElementById(METADATA.timerId).style.display = METADATA.displayNoneStyle;
-    displayResult(hasWon, METADATA);
-}
-
-function displayResult(hasWon, METADATA) {
-    let textColor = "";
-    let resultText = "";
-
-    if (!hasWon) {
-        textColor = "red";
-        resultText = "You suck.";
-    } else {
-        textColor = "green";
-
-        let timeValues = dateFormatString(new Date(new Date(METADATA.timePerGameInMS) - METADATA.countDown)).split(":");
-        let mins = parseInt(timeValues[0]);
-        let secs = parseInt(timeValues[1]);
-
-        resultText = "Good job! It took you " +
-            (mins === 0 ? "" : mins + " min ") +
-            (secs === 0 ? "" : secs + " sec") +
-            ".";
+    function playerHasWon() {
+        // True if number of revealed cells equals number of cells
+        // on board minus the last pair.
+        return gameSessionData.revealed ===
+            METADATA.length * METADATA.length - gameSessionData.guessedCells.length
     }
 
-    let resultDOMElement = document.getElementById(METADATA.resultId);
-    resultDOMElement.style.color = textColor;
-    resultDOMElement.innerHTML = resultText;
-}
+    function isCellClickable(cell, guessCells) {
+        // True if cell's pair hasn't been found and if cell isn't
+        // already guessed in the current guess.
+        return !cell.pairFound &&
+            !(guessCells.length === 1 && guessCells.indexOf(cell) >= 0);
+    }
 
-function toggleCellDisplay(toDisplay, cell, METADATA) {
-    let imgStyle = document.getElementById(METADATA.tableId).rows[cell.row].cells[cell.column].firstChild.style;
-    imgStyle.display = toDisplay ? "" : METADATA.displayNoneStyle;
-}
+    function endGame(hasWon) {
+        Array.from(document.querySelectorAll("#" + METADATA.tableId + " td"))
+            .forEach(function (cell) {
+                cell.onclick = undefined;
+            });
 
-function isPairFound(METADATA) {
-    return METADATA.guessCells.length === 2 &&
-        METADATA.guessCells[0].value === METADATA.guessCells[1].value;
-}
+        setCursorToNotAllowed(METADATA.tableId);
+        document.getElementById(METADATA.timerId).style.display = METADATA.displayNoneStyle;
+        displayResult(hasWon);
+    }
 
-function Tile(value, imgURL, row, column) {
-    this.value = value;
-    this.imgURL = imgURL;
-    this.row = row;
-    this.column = column;
-    this.clicks = 0;
-    this.pairFound = false;
-}
+    function displayResult(hasWon) {
+        let textColor = "";
+        let resultText = "";
+
+        if (!hasWon) {
+            textColor = "red";
+            resultText = "You suck.";
+        } else {
+            textColor = "green";
+
+            let timeTakenToFinish = new Date(
+                new Date(METADATA.timePerGameInMS) - gameSessionData.countDown
+            );
+            let mins = timeTakenToFinish.getMinutes();
+            let secs = timeTakenToFinish.getSeconds();
+
+            resultText = "Good job! It took you " +
+                (mins === 0 ? "" : mins + " min ") +
+                (secs === 0 ? "" : secs + " sec") +
+                ".";
+        }
+
+        let resultDOMElement = document.getElementById(METADATA.resultId);
+        resultDOMElement.style.color = textColor;
+        resultDOMElement.innerHTML = resultText;
+    }
+
+    function toggleCellDisplay(toDisplay, cell) {
+        let imgStyle = document.getElementById(METADATA.tableId)
+            .rows[cell.row]
+            .cells[cell.column]
+            .firstChild.style;
+
+        imgStyle.display = toDisplay ? "" : METADATA.displayNoneStyle;
+    }
+
+    function isSetFound() {
+        let setFound = true;
+
+        if (gameSessionData.guessedCells.length === METADATA.numberOfCellsInSet) {
+            for (let index = 1; index < gameSessionData.guessedCells.length; index++) {
+                if (gameSessionData.guessedCells[index - 1].value !==
+                    gameSessionData.guessedCells[index].value) {
+                    setFound = false;
+                }
+            }
+        } else {
+            setFound = false;
+        }
+
+        return setFound;
+    }
+
+    function Tile(value, imgURL, row, column) {
+        this.value = value;
+        this.imgURL = imgURL;
+        this.row = row;
+        this.column = column;
+        this.clicks = 0;
+        this.pairFound = false;
+    }
+}();
