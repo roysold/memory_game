@@ -281,40 +281,40 @@ window.onload = function () {
     }
 
     function insertValuesIntoMatrix(values) {
-        const imgNames = {
-            0: "1.png",
-            1: "2.png",
-            2: "3.png",
-            3: "4.png",
-            4: "5.png",
-            5: "6.png",
-            6: "7.png",
-            7: "8.png",
-            8: "1.png",
-            9: "2.png",
-            10: "3.png",
-            11: "4.png",
-            12: "5.png",
-            13: "6.png",
-            14: "7.png",
-            15: "8.png",
-            16: "1.png",
-            17: "2.png",
-            18: "3.png",
-            19: "4.png",
-            20: "5.png",
-            21: "6.png",
-            22: "7.png",
-            23: "8.png",
-            24: "1.png",
-            25: "2.png",
-            26: "3.png",
-            27: "4.png",
-            28: "5.png",
-            29: "6.png",
-            30: "7.png",
-            31: "8.png",
-        };
+        const imgNames = [
+            { id: 0, imgURL: "1.png" },
+            { id: 1, imgURL: "2.png" },
+            { id: 2, imgURL: "3.png" },
+            { id: 3, imgURL: "4.png" },
+            { id: 4, imgURL: "5.png" },
+            { id: 5, imgURL: "6.png" },
+            { id: 6, imgURL: "7.png" },
+            { id: 7, imgURL: "8.png" },
+            { id: 0, imgURL: "1.png" },
+            { id: 1, imgURL: "2.png" },
+            { id: 2, imgURL: "3.png" },
+            { id: 3, imgURL: "4.png" },
+            { id: 4, imgURL: "5.png" },
+            { id: 5, imgURL: "6.png" },
+            { id: 6, imgURL: "7.png" },
+            { id: 7, imgURL: "8.png" },
+            { id: 0, imgURL: "1.png" },
+            { id: 1, imgURL: "2.png" },
+            { id: 2, imgURL: "3.png" },
+            { id: 3, imgURL: "4.png" },
+            { id: 4, imgURL: "5.png" },
+            { id: 5, imgURL: "6.png" },
+            { id: 6, imgURL: "7.png" },
+            { id: 7, imgURL: "8.png" },
+            { id: 0, imgURL: "1.png" },
+            { id: 1, imgURL: "2.png" },
+            { id: 2, imgURL: "3.png" },
+            { id: 3, imgURL: "4.png" },
+            { id: 4, imgURL: "5.png" },
+            { id: 5, imgURL: "6.png" },
+            { id: 6, imgURL: "7.png" },
+            { id: 7, imgURL: "8.png" }
+        ];
 
         let matrix = [];
         let valuesCopy = values.slice();
@@ -325,11 +325,11 @@ window.onload = function () {
             matrix.push([]);
 
             for (let colIndex = 0; colIndex < length; colIndex++) {
-                let value = valuesCopy.pop();
+                let img = imgNames[valuesCopy.pop()];
 
                 matrix[rowIndex].push(new Tile(
-                    value,
-                    imagesDirectory + "/" + imgNames[value],
+                    img.id,
+                    imagesDirectory + "/" + img.imgURL,
                     rowIndex,
                     colIndex
                 ));
@@ -442,8 +442,8 @@ window.onload = function () {
 
         if (gameSessionData.guessedCells.length === METADATA.numberOfCellsInSet) {
             for (let index = 1; index < gameSessionData.guessedCells.length; index++) {
-                if (gameSessionData.guessedCells[index - 1].imgURL !==
-                    gameSessionData.guessedCells[index].imgURL) {
+                if (gameSessionData.guessedCells[index - 1].value !==
+                    gameSessionData.guessedCells[index].value) {
                     setFound = false;
                 }
             }

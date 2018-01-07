@@ -271,18 +271,18 @@ aside>* {
     }
     25% {
         background-color: yellow;
-        left: 3vmin;
-        top: 0px;
+        left: 15vmin;
+        top: 10vmin;
     }
     50% {
         background-color: blue;
-        left: -3vmin;
-        top: -5vmin;
+        left: -15vmin;
+        top: -10vmin;
     }
     75% {
         background-color: red;
         left: 0px;
-        top: 3vmin;
+        top: 10vmin;
     }
     100% {
         background-color: #2d841f;
@@ -300,18 +300,18 @@ aside>* {
     }
     25% {
         background-color: red;
-        left: -3vmin;
-        top: 0px;
+        left: -10vmin;
+        top: -15vmin;
     }
     50% {
         background-color: yellow;
-        left: 3vmin;
-        top: 5vmin;
+        left: 10vmin;
+        top: 15vmin;
     }
     75% {
         background-color: blue;
-        left: 0px;
-        top: -3vmin;
+        left: -10vmin;
+        top: 0px;
     }
     100% {
         background-color: #2d841f;
